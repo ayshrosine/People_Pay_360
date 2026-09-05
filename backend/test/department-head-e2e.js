@@ -35,7 +35,7 @@ async function login(email) {
 }
 
 (async () => {
-  const admin = await login('admin@peoplepay360.com');
+  const admin = await login('admin@odoopnx.com');
   const A = admin.accessToken;
 
   const departments = (await req('GET', '/departments', A)).json.data;

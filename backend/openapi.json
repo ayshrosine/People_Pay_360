@@ -2307,7 +2307,7 @@
     }
   },
   "info": {
-    "title": "PeoplePay360 API",
+    "title": "Odoo PNX API",
     "description": "HR & Payroll Management System API",
     "version": "1.0",
     "contact": {}
@@ -2519,10 +2519,6 @@
             "type": "string",
             "example": "uuid-of-manager"
           },
-          "workingScheduleId": {
-            "type": "string",
-            "example": "uuid-of-working-schedule"
-          },
           "status": {
             "type": "string",
             "enum": [
@@ -2580,10 +2576,6 @@
           "managerId": {
             "type": "string",
             "example": "uuid-of-manager"
-          },
-          "workingScheduleId": {
-            "type": "string",
-            "example": "uuid-of-working-schedule"
           },
           "status": {
             "type": "string",

@@ -38,7 +38,12 @@ export function PageShell({
   wide?: boolean;
 }) {
   return (
-    <div className={cn('mx-auto w-full px-4 py-7 sm:px-6', wide ? 'max-w-[1600px]' : 'max-w-[1400px]')}>
+    <div
+      className={cn(
+        'page-enter mx-auto w-full px-4 py-7 sm:px-6',
+        wide ? 'max-w-[1600px]' : 'max-w-[1400px]',
+      )}
+    >
       {breadcrumbs?.length ? (
         <nav aria-label="Breadcrumb" className="mb-3 flex items-center gap-1 text-[11.5px]">
           {breadcrumbs.map((crumb, index) => (

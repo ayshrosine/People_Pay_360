@@ -24,6 +24,6 @@ export const useUiStore = create<UiState>()(
       setEmployeeView: (employeeView) => set({ employeeView }),
       setAttendanceWidgetOpen: (attendanceWidgetOpen) => set({ attendanceWidgetOpen }),
     }),
-    { name: 'peoplepay360.ui', storage: createJSONStorage(() => localStorage) },
+    { name: 'odoo-pnx.ui', storage: createJSONStorage(() => localStorage) },
   ),
 );

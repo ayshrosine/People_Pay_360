@@ -135,8 +135,6 @@ export interface Employee {
   department: Department | null;
   managerId: string | null;
   manager: Pick<Employee, 'id' | 'name'> | null;
-  workingScheduleId: string | null;
-  workingSchedule: WorkingSchedule | null;
   status: EmployeeStatus;
   avatarUrl: string | null;
   phone: string | null;

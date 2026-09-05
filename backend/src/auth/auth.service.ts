@@ -112,7 +112,7 @@ export class AuthService {
         employeeId: true,
         createdAt: true,
         employee: {
-          include: { department: true, workingSchedule: true },
+          include: { department: true },
         },
       },
     });

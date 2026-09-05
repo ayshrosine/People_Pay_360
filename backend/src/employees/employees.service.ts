@@ -47,7 +47,6 @@ export class EmployeesService {
       include: {
         department: true,
         manager: true,
-        workingSchedule: true,
         user: {
           select: {
             id: true,
@@ -105,7 +104,6 @@ export class EmployeesService {
       include: {
         department: true,
         manager: true,
-        workingSchedule: true,
         reports: true,
         user: {
           select: {
@@ -142,7 +140,6 @@ export class EmployeesService {
       include: {
         department: true,
         manager: true,
-        workingSchedule: true,
       },
     });
   }
@@ -176,7 +173,6 @@ export class EmployeesService {
       include: {
         department: true,
         manager: true,
-        workingSchedule: true,
       },
     });
   }
@@ -250,7 +246,6 @@ export class EmployeesService {
       where: { employeeId: id },
       include: {
         salaryStructure: true,
-        workingSchedule: true,
       },
       orderBy: { startDate: 'desc' },
     });

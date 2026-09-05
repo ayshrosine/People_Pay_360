@@ -51,7 +51,7 @@ async function settle(page) {
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message.slice(0, 180)));
 
   // John Doe heads Engineering and is otherwise an ordinary employee.
-  await signIn(page, 'john.doe@peoplepay360.com');
+  await signIn(page, 'john.doe@odoopnx.com');
   await page.goto(APP + '/time-off/requests', { waitUntil: 'networkidle2' });
   await settle(page);
 

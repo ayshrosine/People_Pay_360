@@ -66,9 +66,9 @@ npm run dev
 
 | Email | Role | Password |
 |---|---|---|
-| `admin@peoplepay360.com` | Administrator | `password123` |
-| `hrpayroll@peoplepay360.com` | HR Payroll User | `password123` |
-| `john.doe@peoplepay360.com` | Employee **and head of Engineering** | `password123` |
+| `admin@odoopnx.com` | Administrator | `password123` |
+| `hrpayroll@odoopnx.com` | HR Payroll User | `password123` |
+| `john.doe@odoopnx.com` | Employee **and head of Engineering** | `password123` |
 
 Roles change what you see: an administrator lands on the payroll dashboard, an
 employee lands on their own attendance and can only ever read their own records.

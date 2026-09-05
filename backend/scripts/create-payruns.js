@@ -17,7 +17,7 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
 (async () => {
-  const auth = await call('POST', '/auth/login', { email: 'admin@peoplepay360.com', password: 'password123' });
+  const auth = await call('POST', '/auth/login', { email: 'admin@odoopnx.com', password: 'password123' });
   const token = auth.accessToken;
   console.log('signed in as ADMIN');
 

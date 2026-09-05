@@ -149,7 +149,7 @@ export class PayslipPdfService {
   <header>
     <div>
       <h1>Payslip</h1>
-      <div class="muted">PeoplePay360</div>
+      <div class="muted">Odoo PNX</div>
     </div>
     <div class="period">
       <div class="value">${escapeHtml(payslip.payrun.name)}</div>

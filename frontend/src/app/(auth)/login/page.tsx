@@ -4,15 +4,16 @@ import * as React from 'react';
 import { ArrowRight, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/primitives';
+import { Brand, APP_NAME } from '@/components/layout/brand';
 import { LatticeBackground } from '@/components/layout/lattice-background';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { normaliseError } from '@/lib/api/client';
 
 /** Seeded logins, shown only outside production so a reviewer can get in. */
 const DEMO_ACCOUNTS = [
-  { label: 'Administrator', email: 'admin@peoplepay360.com' },
-  { label: 'HR Payroll', email: 'hrpayroll@peoplepay360.com' },
-  { label: 'Employee', email: 'john.doe@peoplepay360.com' },
+  { label: 'Administrator', email: 'admin@odoopnx.com' },
+  { label: 'HR Payroll', email: 'hrpayroll@odoopnx.com' },
+  { label: 'Employee', email: 'john.doe@odoopnx.com' },
 ];
 
 export default function LoginPage() {
@@ -53,14 +54,7 @@ export default function LoginPage() {
     <main className="relative min-h-dvh overflow-hidden bg-[var(--surface-canvas)] px-4 py-6">
       <LatticeBackground />
 
-      <div className="relative flex items-center gap-2.5">
-        <div className="grid h-8 w-8 place-items-center rounded-[7px] bg-[var(--accent)]">
-          <span className="font-mono text-[13px] font-bold text-white">P</span>
-        </div>
-        <p className="text-[15px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-          PeoplePay360
-        </p>
-      </div>
+      <Brand className="relative" />
 
       <div className="relative grid place-items-center px-1 py-10 sm:py-16">
         {/* Translucent over the lattice, so the grid reads through the card
@@ -71,7 +65,7 @@ export default function LoginPage() {
           </p>
 
           <h1 className="mt-4 text-[30px] font-bold leading-[1.1] tracking-[-0.03em] text-[var(--text-primary)]">
-            Sign in to PeoplePay360
+            Sign in to {APP_NAME}
           </h1>
           <p className="mt-3 text-[13.5px] leading-relaxed text-[var(--text-tertiary)]">
             Employees, contracts, attendance and payroll — one workspace.

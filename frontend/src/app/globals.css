@@ -4,7 +4,7 @@
 @import "tw-animate-css";
 
 /* ============================================================================
-   PeoplePay360 design tokens
+   Odoo PNX design tokens
 
    The product is a precision instrument for people who reconcile money: dense,
    quiet, and built so that numbers lead. Structure comes from hairline borders
@@ -346,4 +346,39 @@ table th {
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
   will-change: opacity;
+}
+
+/* A page settles in rather than appearing: 8px of travel over 300ms reads as
+   "this arrived" without ever delaying the content. Applied by PageShell, so
+   every route animates identically and no page has to remember to. */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page-enter {
+  animation: page-enter 300ms var(--ease-out) both;
+}
+
+/* Rows and cards in a list stagger behind the page, so a table reads top to
+   bottom instead of flashing in as one block. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise-in {
+  animation: rise-in 260ms var(--ease-out) both;
 }

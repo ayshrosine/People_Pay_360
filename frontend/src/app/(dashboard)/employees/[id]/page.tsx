@@ -39,7 +39,6 @@ import {
   useSaveEmployee,
   useTimeOffRequests,
   useAttendance,
-  useWorkingSchedules,
 } from '@/hooks/use-resources';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { normaliseError } from '@/lib/api/client';
@@ -54,7 +53,6 @@ interface FormState {
   jobPosition: string;
   departmentId: string;
   managerId: string;
-  workingScheduleId: string;
   status: Employee['status'];
   employeeType: string;
   phone: string;
@@ -68,7 +66,6 @@ const EMPTY: FormState = {
   jobPosition: '',
   departmentId: '',
   managerId: '',
-  workingScheduleId: '',
   status: 'ACTIVE',
   employeeType: 'Full-time',
   phone: '',
@@ -83,7 +80,6 @@ function toFormState(record: Employee): FormState {
     jobPosition: record.jobPosition ?? '',
     departmentId: record.departmentId ?? '',
     managerId: record.managerId ?? '',
-    workingScheduleId: record.workingScheduleId ?? '',
     status: record.status,
     employeeType: record.employeeType ?? '',
     phone: record.phone ?? '',
@@ -125,7 +121,6 @@ function EmployeeForm() {
 
   const employee = useEmployee(id);
   const departments = useDepartments();
-  const schedules = useWorkingSchedules();
   const colleagues = useEmployees({ limit: 200 });
 
   const save = useSaveEmployee();
@@ -159,7 +154,6 @@ function EmployeeForm() {
       jobPosition: form.jobPosition.trim() || undefined,
       departmentId: form.departmentId || undefined,
       managerId: form.managerId || undefined,
-      workingScheduleId: form.workingScheduleId || undefined,
       status: form.status,
       employeeType: form.employeeType || undefined,
       phone: form.phone.trim() || undefined,
@@ -310,25 +304,6 @@ function EmployeeForm() {
                       </Select>
                     </Field>
                   </div>
-
-                  <Field
-                    label="Working schedule"
-                    htmlFor="workingScheduleId"
-                    hint="Attendance and payroll both resolve expected hours from this schedule."
-                  >
-                    <Select
-                      id="workingScheduleId"
-                      value={form.workingScheduleId}
-                      onChange={(event) => set('workingScheduleId', event.target.value)}
-                    >
-                      <option value="">No schedule</option>
-                      {schedules.data?.data.map((schedule) => (
-                        <option key={schedule.id} value={schedule.id}>
-                          {schedule.name} · {schedule.totalWeeklyHours}h/week
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
 
                   <Field label="Status" htmlFor="status">
                     <Select

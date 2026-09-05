@@ -19,10 +19,13 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'PeoplePay360',
-    template: '%s · PeoplePay360',
+    default: 'Odoo PNX',
+    template: '%s · Odoo PNX',
   },
   description: 'HR and payroll operations: employees, contracts, attendance, time off and payruns.',
+  // The same file the sidebar and sign-in screen render, so the tab icon and
+  // the in-app mark can never drift apart.
+  icons: { icon: '/icon.svg', shortcut: '/icon.svg', apple: '/icon.svg' },
 };
 
 export const viewport: Viewport = {

@@ -14,7 +14,9 @@ export class WorkingSchedulesService {
           orderBy: { dayOfWeek: 'asc' },
         },
         _count: {
-          select: { employees: true, contracts: true },
+          // Employees reach a schedule through their contract now, so the
+          // contract count is the only direct measure of how used it is.
+          select: { contracts: true },
         },
       },
     });
@@ -27,8 +29,8 @@ export class WorkingSchedulesService {
         lines: {
           orderBy: { dayOfWeek: 'asc' },
         },
-        employees: true,
-        contracts: true,
+        // The people on this schedule, via the contracts that reference it.
+        contracts: { include: { employee: true } },
       },
     });
 

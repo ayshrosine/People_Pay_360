@@ -13,6 +13,7 @@ import {
   Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Brand } from '@/components/layout/brand';
 import { useAuth } from '@/lib/auth/auth-provider';
 import type { Subject } from '@/lib/abilities';
 
@@ -68,17 +69,7 @@ export function Sidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-[var(--border-subtle)] bg-[var(--surface-base)] lg:flex">
-      <Link href="/dashboard" className="flex items-center gap-2.5 px-5 py-5">
-        <span
-          className="grid place-items-center rounded-[8px] bg-[var(--accent)]"
-          style={{ width: 30, height: 30 }}
-        >
-          <span className="font-mono text-[13px] font-bold text-white">P</span>
-        </span>
-        <span className="text-[15px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-          PeoplePay360
-        </span>
-      </Link>
+      <Brand href="/dashboard" className="px-5 py-5" />
 
       <p className="px-5 pb-2 pt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--text-muted)]">
         HR Workspace

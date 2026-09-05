@@ -116,16 +116,32 @@ export class AttendanceService {
     });
   }
 
+  /**
+   * The schedule that applied to an employee on a given day.
+   *
+   * It hangs off the contract, not the person: someone who moved to part time
+   * in July must still be judged against the full-time roster for June. The
+   * contract running on the day is the only correct answer.
+   */
+  private async scheduleOn(employeeId: string, when: Date) {
+    const contract = await this.prisma.contract.findFirst({
+      where: {
+        employeeId,
+        status: 'RUNNING',
+        startDate: { lte: when },
+        OR: [{ endDate: null }, { endDate: { gte: when } }],
+      },
+      orderBy: { startDate: 'desc' },
+      include: { workingSchedule: { include: { lines: true } } },
+    });
+
+    return contract?.workingSchedule ?? null;
+  }
+
   async checkOut(id: string) {
     const attendance = await this.prisma.attendance.findUnique({
       where: { id },
-      include: {
-        employee: {
-          include: {
-            workingSchedule: true,
-          },
-        },
-      },
+      include: { employee: true },
     });
 
     if (!attendance) {
@@ -138,15 +154,18 @@ export class AttendanceService {
 
     const checkOut = new Date();
     const checkIn = new Date(attendance.checkIn);
-    const workedHours = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60); // Convert to hours
+    const workedHours = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60);
 
-    // Determine status based on worked hours and schedule
+    // Judge the day against the roster that applied on the day itself.
     let status = attendance.status;
-    
-    if (attendance.employee.workingSchedule) {
-      const schedule = attendance.employee.workingSchedule;
-      const expectedHours = schedule.totalWeeklyHours / 5; // Assuming 5-day work week
-      
+    const schedule = await this.scheduleOn(attendance.employeeId, checkIn);
+
+    if (schedule) {
+      // Use the real number of rostered days; assuming five would misjudge a
+      // part-time roster in both directions.
+      const rosteredDays = schedule.lines.length || 5;
+      const expectedHours = schedule.totalWeeklyHours / rosteredDays;
+
       if (workedHours > expectedHours * 1.2) {
         status = AttendanceStatus.OVERTIME;
       } else if (workedHours < expectedHours * 0.8) {

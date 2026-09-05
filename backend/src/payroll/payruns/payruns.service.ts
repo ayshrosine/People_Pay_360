@@ -53,12 +53,13 @@ export class PayrunsService {
       },
       include: {
         department: true,
-        workingSchedule: true,
         contracts: {
           where: contractFilter,
           orderBy: { startDate: 'desc' },
           take: 1,
-          include: { salaryStructure: true },
+          // The schedule is a contract term, so the hours shown for a period
+          // come from the contract that covers it, not from the person.
+          include: { salaryStructure: true, workingSchedule: true },
         },
       },
       orderBy: { name: 'asc' },
@@ -74,7 +75,7 @@ export class PayrunsService {
         employeeType: employee.employeeType,
         department: employee.department?.name ?? null,
         departmentId: employee.departmentId,
-        workingHours: employee.workingSchedule?.totalWeeklyHours ?? null,
+        workingHours: contract?.workingSchedule?.totalWeeklyHours ?? null,
         startDate: contract?.startDate ?? null,
         wage: contract ? Number(contract.wage) : null,
         wageType: contract?.wageType ?? null,

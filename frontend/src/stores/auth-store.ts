@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>()(
       clear: () => set({ accessToken: null, refreshToken: null, user: null }),
     }),
     {
-      name: 'peoplepay360.session',
+      name: 'odoo-pnx.session',
       storage: createJSONStorage(() =>
         typeof window === 'undefined' ? (undefined as never) : window.sessionStorage,
       ),

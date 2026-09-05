@@ -12,7 +12,7 @@ const SHOTS = process.env.SHOT_DIR || path.join(__dirname, '..', '.ui-shots');
 
 const ROLES = [
   {
-    label: 'ADMIN', email: 'admin@peoplepay360.com',
+    label: 'ADMIN', email: 'admin@odoopnx.com',
     routes: [
       '/dashboard', '/employees', '/contracts', '/working-schedules',
       '/attendance', '/time-off', '/time-off/requests', '/time-off/allocations',
@@ -21,11 +21,11 @@ const ROLES = [
     ],
   },
   {
-    label: 'HR_PAYROLL_USER', email: 'hrpayroll@peoplepay360.com',
+    label: 'HR_PAYROLL_USER', email: 'hrpayroll@odoopnx.com',
     routes: ['/dashboard', '/employees', '/payroll/payruns', '/payroll/payslips', '/attendance'],
   },
   {
-    label: 'EMPLOYEE', email: 'john.doe@peoplepay360.com',
+    label: 'EMPLOYEE', email: 'john.doe@odoopnx.com',
     routes: ['/attendance', '/time-off', '/payroll/payslips'],
   },
 ];

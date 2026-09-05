@@ -26,11 +26,6 @@ export class CreateEmployeeDto {
   @IsString()
   managerId?: string;
 
-  @ApiProperty({ example: 'uuid-of-working-schedule', required: false })
-  @IsOptional()
-  @IsString()
-  workingScheduleId?: string;
-
   @ApiProperty({ enum: EmployeeStatus, required: false })
   @IsOptional()
   @IsEnum(EmployeeStatus)

@@ -186,13 +186,6 @@ export default function EmployeesPage() {
               { key: 'department', header: 'Department', cell: (row) => row.department?.name ?? '—' },
               { key: 'type', header: 'Type', cell: (row) => row.employeeType ?? '—' },
               {
-                key: 'schedule',
-                header: 'Weekly hours',
-                numeric: true,
-                cell: (row) =>
-                  row.workingSchedule ? `${row.workingSchedule.totalWeeklyHours}h` : '—',
-              },
-              {
                 key: 'status',
                 header: 'Status',
                 cell: (row) => <StatusChip status={row.status} />,
@@ -232,7 +225,7 @@ export default function EmployeesPage() {
                   <Link
                     key={employee.id}
                     href={`/employees/${employee.id}`}
-                    className="group rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-base)] p-3 transition-[border-color,background-color,transform] duration-150 [transition-timing-function:var(--ease-out)] hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]"
+                    className="group rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-base)] p-3 transition-[border-color,background-color,transform,box-shadow] duration-200 [transition-timing-function:var(--ease-out)] hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)] hover:shadow-[0_10px_28px_-16px_rgba(0,0,0,0.55)]"
                   >
                     <div className="flex items-start gap-2.5">
                       <Avatar name={employee.name} src={employee.avatarUrl} size={34} />

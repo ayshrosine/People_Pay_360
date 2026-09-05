@@ -18,12 +18,24 @@ import { cn, initials } from '@/lib/utils';
 export function Card({
   className,
   children,
+  interactive,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: React.HTMLAttributes<HTMLDivElement> & {
+  /**
+   * Set on cards that are themselves a target - a link, or something you
+   * click. A card that only holds content should not react to the pointer,
+   * or every dashboard panel would look clickable.
+   */
+  interactive?: boolean;
+}) {
   return (
     <div
       className={cn(
         'rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-base)]',
+        'transition-[border-color,background-color,transform,box-shadow] duration-200',
+        '[transition-timing-function:var(--ease-out)]',
+        interactive &&
+          'cursor-pointer hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)] hover:shadow-[0_10px_28px_-16px_rgba(0,0,0,0.55)]',
         className,
       )}
       {...props}
@@ -99,7 +111,11 @@ export function SectionRule({ label }: { label?: string }) {
 /* ------------------------------------------------------------------ inputs */
 
 const controlBase =
-  'w-full rounded-[var(--radius-ctl)] border border-[var(--control-border)] bg-[var(--control-bg)] px-3 text-[13px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-colors duration-150 hover:bg-[var(--control-bg-hover)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-ring)] disabled:opacity-50';
+  'w-full rounded-[var(--radius-ctl)] border border-[var(--control-border)] bg-[var(--control-bg)] px-3 text-[13px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] ' +
+  // Border and ring animate with the fill, so focus arrives as one movement.
+  'transition-[background-color,border-color,box-shadow] duration-200 [transition-timing-function:var(--ease-out)] ' +
+  'hover:bg-[var(--control-bg-hover)] hover:border-[var(--border-strong)] ' +
+  'focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-ring)] disabled:opacity-50';
 
 export const Input = React.forwardRef<
   HTMLInputElement,

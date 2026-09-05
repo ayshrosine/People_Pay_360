@@ -39,7 +39,7 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   const config = new DocumentBuilder()
-    .setTitle('PeoplePay360 API')
+    .setTitle('Odoo PNX API')
     .setDescription('HR & Payroll Management System API')
     .setVersion('1.0')
     .addBearerAuth()

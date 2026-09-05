@@ -129,9 +129,12 @@ export function DataTable<T>({
                   tabIndex={interactive ? 0 : undefined}
                   role={interactive ? 'button' : undefined}
                   className={cn(
-                    'border-b border-[var(--border-subtle)] transition-colors duration-100',
+                    'border-b border-[var(--border-subtle)]',
+                    'transition-[background-color,box-shadow] duration-150 [transition-timing-function:var(--ease-out)]',
                     interactive &&
-                      'cursor-pointer hover:bg-[var(--surface-hover)] focus-visible:bg-[var(--surface-hover)] focus-visible:outline-none',
+                      // The inset rail is the same device the accented row uses,
+                      // so hovering previews the shape of a selected row.
+                      'cursor-pointer hover:bg-[var(--surface-hover)] hover:shadow-[inset_2px_0_0_0_var(--accent)] focus-visible:bg-[var(--surface-hover)] focus-visible:shadow-[inset_2px_0_0_0_var(--accent)] focus-visible:outline-none',
                     accented && 'shadow-[inset_2px_0_0_0_var(--status-success)]',
                   )}
                 >

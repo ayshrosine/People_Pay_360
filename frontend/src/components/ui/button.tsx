@@ -10,20 +10,34 @@ const button = cva(
   [
     'inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium',
     'rounded-[var(--radius-ctl)] border select-none',
-    'transition-[background-color,border-color,color,transform] duration-150',
+    // Shadow and translate join the transition so the hover lift eases with
+    // everything else instead of snapping a frame ahead of it.
+    'transition-[background-color,border-color,color,transform,box-shadow] duration-200',
     '[transition-timing-function:var(--ease-out)]',
-    // Tactile confirmation that the click was heard.
-    'active:scale-[0.97]',
+    // Tactile confirmation that the click was heard: press wins over hover, so
+    // the button settles back down under the cursor.
+    'active:scale-[0.97] active:translate-y-0 active:duration-75',
     'disabled:pointer-events-none disabled:opacity-45',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-ring)]',
+    // An icon that leads or trails the label drifts a hair on hover, which
+    // makes the whole control feel like one object rather than a box of parts.
+    '[&_svg]:transition-transform [&_svg]:duration-200 [&_svg]:[transition-timing-function:var(--ease-out)]',
   ],
   {
     variants: {
       variant: {
-        primary:
-          'bg-[var(--accent)] border-transparent text-[var(--accent-fg)] hover:bg-[var(--accent-hover)]',
-        secondary:
-          'bg-[var(--surface-raised)] border-[var(--border-default)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)]',
+        primary: [
+          'bg-[var(--accent)] border-transparent text-[var(--accent-fg)]',
+          'hover:bg-[var(--accent-hover)] hover:-translate-y-px',
+          // A glow in the accent's own colour, so depth reads without a
+          // grey drop shadow that would fight the borders-only language.
+          'hover:shadow-[0_6px_20px_-8px_var(--accent-ring)]',
+          'hover:[&_svg:last-child]:translate-x-0.5',
+        ].join(' '),
+        secondary: [
+          'bg-[var(--surface-raised)] border-[var(--border-default)] text-[var(--text-primary)]',
+          'hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)] hover:-translate-y-px',
+        ].join(' '),
         ghost:
           'bg-transparent border-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]',
         danger:

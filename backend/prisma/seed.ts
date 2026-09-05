@@ -11,10 +11,10 @@ async function main() {
 
   // Create Users with all roles
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@peoplepay360.com' },
+    where: { email: 'admin@odoopnx.com' },
     update: {},
     create: {
-      email: 'admin@peoplepay360.com',
+      email: 'admin@odoopnx.com',
       passwordHash: hashedPassword,
       role: RoleName.ADMIN,
       isActive: true,
@@ -22,10 +22,10 @@ async function main() {
   });
 
   const hrManagerUser = await prisma.user.upsert({
-    where: { email: 'hr.manager@peoplepay360.com' },
+    where: { email: 'hr.manager@odoopnx.com' },
     update: {},
     create: {
-      email: 'hr.manager@peoplepay360.com',
+      email: 'hr.manager@odoopnx.com',
       passwordHash: await argon2.hash('ChangeMe123!'),
       role: RoleName.HR_MANAGER,
       isActive: true,
@@ -33,10 +33,10 @@ async function main() {
   });
 
   const hrPayrollUser = await prisma.user.upsert({
-    where: { email: 'hrpayroll@peoplepay360.com' },
+    where: { email: 'hrpayroll@odoopnx.com' },
     update: {},
     create: {
-      email: 'hrpayroll@peoplepay360.com',
+      email: 'hrpayroll@odoopnx.com',
       passwordHash: hashedPassword,
       role: RoleName.HR_PAYROLL_USER,
       isActive: true,
@@ -44,10 +44,10 @@ async function main() {
   });
 
   const hrPayrollManagerUser = await prisma.user.upsert({
-    where: { email: 'hrpayrollmanager@peoplepay360.com' },
+    where: { email: 'hrpayrollmanager@odoopnx.com' },
     update: {},
     create: {
-      email: 'hrpayrollmanager@peoplepay360.com',
+      email: 'hrpayrollmanager@odoopnx.com',
       passwordHash: hashedPassword,
       role: RoleName.HR_PAYROLL_MANAGER,
       isActive: true,
@@ -108,15 +108,14 @@ async function main() {
 
   // Create Employees
   const employee1 = await prisma.employee.upsert({
-    where: { workEmail: 'john.doe@peoplepay360.com' },
+    where: { workEmail: 'john.doe@odoopnx.com' },
     update: {},
     create: {
       id: 'employee-1',
       name: 'John Doe',
-      workEmail: 'john.doe@peoplepay360.com',
+      workEmail: 'john.doe@odoopnx.com',
       jobPosition: 'Senior Software Engineer',
       departmentId: engineeringDept.id,
-      workingScheduleId: standardSchedule.id,
       status: EmployeeStatus.ACTIVE,
       phone: '+91-9876543210',
       employeeType: 'Full-time',
@@ -124,7 +123,7 @@ async function main() {
       bankIfsc: 'HDFC0001234',
       user: {
         create: {
-          email: 'john.doe@peoplepay360.com',
+          email: 'john.doe@odoopnx.com',
           passwordHash: hashedPassword,
           role: RoleName.EMPLOYEE,
           isActive: true,
@@ -134,16 +133,15 @@ async function main() {
   });
 
   const employee2 = await prisma.employee.upsert({
-    where: { workEmail: 'jane.smith@peoplepay360.com' },
+    where: { workEmail: 'jane.smith@odoopnx.com' },
     update: {},
     create: {
       id: 'employee-2',
       name: 'Jane Smith',
-      workEmail: 'jane.smith@peoplepay360.com',
+      workEmail: 'jane.smith@odoopnx.com',
       jobPosition: 'Sales Manager',
       departmentId: salesDept.id,
       managerId: employee1.id,
-      workingScheduleId: standardSchedule.id,
       status: EmployeeStatus.ACTIVE,
       phone: '+91-9876543211',
       employeeType: 'Full-time',
@@ -151,7 +149,7 @@ async function main() {
       bankIfsc: 'HDFC0001235',
       user: {
         create: {
-          email: 'jane.smith@peoplepay360.com',
+          email: 'jane.smith@odoopnx.com',
           passwordHash: hashedPassword,
           role: RoleName.EMPLOYEE,
           isActive: true,
@@ -161,15 +159,14 @@ async function main() {
   });
 
   const employee3 = await prisma.employee.upsert({
-    where: { workEmail: 'bob.wilson@peoplepay360.com' },
+    where: { workEmail: 'bob.wilson@odoopnx.com' },
     update: {},
     create: {
       id: 'employee-3',
       name: 'Bob Wilson',
-      workEmail: 'bob.wilson@peoplepay360.com',
+      workEmail: 'bob.wilson@odoopnx.com',
       jobPosition: 'HR Specialist',
       departmentId: hrDept.id,
-      workingScheduleId: standardSchedule.id,
       status: EmployeeStatus.ACTIVE,
       phone: '+91-9876543212',
       employeeType: 'Full-time',
@@ -177,7 +174,7 @@ async function main() {
       bankIfsc: 'HDFC0001236',
       user: {
         create: {
-          email: 'bob.wilson@peoplepay360.com',
+          email: 'bob.wilson@odoopnx.com',
           passwordHash: hashedPassword,
           role: RoleName.EMPLOYEE,
           isActive: true,
@@ -385,13 +382,13 @@ async function main() {
 
   console.log('Database seed completed successfully!');
   console.log('Test users created:');
-  console.log('  - admin@peoplepay360.com (Admin)');
-  console.log('  - hrmanager@peoplepay360.com (HR Manager)');
-  console.log('  - hrpayroll@peoplepay360.com (HR Payroll User)');
-  console.log('  - hrpayrollmanager@peoplepay360.com (HR Payroll Manager)');
-  console.log('  - john.doe@peoplepay360.com (Employee)');
-  console.log('  - jane.smith@peoplepay360.com (Employee)');
-  console.log('  - bob.wilson@peoplepay360.com (Employee)');
+  console.log('  - admin@odoopnx.com (Admin)');
+  console.log('  - hrmanager@odoopnx.com (HR Manager)');
+  console.log('  - hrpayroll@odoopnx.com (HR Payroll User)');
+  console.log('  - hrpayrollmanager@odoopnx.com (HR Payroll Manager)');
+  console.log('  - john.doe@odoopnx.com (Employee)');
+  console.log('  - jane.smith@odoopnx.com (Employee)');
+  console.log('  - bob.wilson@odoopnx.com (Employee)');
   console.log('Password for all users: password123');
 }
 

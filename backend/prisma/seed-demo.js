@@ -36,7 +36,8 @@ const SCHEDULES = [
   },
 ];
 
-// Employees 1-3 come from the base seed; 4-12 are added here.
+// Employees 1-3 come from the base seed; 4-12 are added here. `sched` lands on
+// the contract, not the employee: a schedule is a term of employment.
 const EMPLOYEES = [
   { id: 'employee-4', name: 'Priya Sharma', pos: 'Backend Engineer', dept: 'dept-engineering', type: 'Full-time', wage: 62000, sched: 'schedule-standard-demo', bank: '5512340098', ifsc: 'HDFC0001234' },
   { id: 'employee-5', name: 'Arjun Nair', pos: 'Frontend Engineer', dept: 'dept-engineering', type: 'Full-time', wage: 58000, sched: 'schedule-standard-demo', bank: '5512340099', ifsc: 'HDFC0001234' },
@@ -99,10 +100,10 @@ async function main() {
   for (const e of EMPLOYEES) {
     await prisma.employee.upsert({
       where: { id: e.id },
-      update: { departmentId: departmentIds.get(e.dept), workingScheduleId: e.sched, employeeType: e.type },
+      update: { departmentId: departmentIds.get(e.dept), employeeType: e.type },
       create: {
-        id: e.id, name: e.name, workEmail: slug(e.name) + '@peoplepay360.com',
-        jobPosition: e.pos, departmentId: departmentIds.get(e.dept), workingScheduleId: e.sched,
+        id: e.id, name: e.name, workEmail: slug(e.name) + '@odoopnx.com',
+        jobPosition: e.pos, departmentId: departmentIds.get(e.dept),
         employeeType: e.type, status: 'ACTIVE', phone: '+91 90000 00000',
         bankAccount: e.bank, bankIfsc: e.ifsc,
         managerId: manager && manager.id !== e.id ? manager.id : null,
@@ -130,10 +131,10 @@ async function main() {
   // A self-service login for one of the new employees.
   const password = await argon2.hash('password123');
   await prisma.user.upsert({
-    where: { email: 'priya.sharma@peoplepay360.com' },
+    where: { email: 'priya.sharma@odoopnx.com' },
     update: { employeeId: 'employee-4' },
     create: {
-      email: 'priya.sharma@peoplepay360.com', passwordHash: password,
+      email: 'priya.sharma@odoopnx.com', passwordHash: password,
       role: 'EMPLOYEE', employeeId: 'employee-4', isActive: true,
     },
   });

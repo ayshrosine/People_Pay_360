@@ -28,16 +28,16 @@ async function login(email) {
 }
 
 (async () => {
-  const admin = await login('admin@peoplepay360.com');
-  const hr = await login('hrpayroll@peoplepay360.com');
-  const emp = await login('john.doe@peoplepay360.com');
+  const admin = await login('admin@odoopnx.com');
+  const hr = await login('hrpayroll@odoopnx.com');
+  const emp = await login('john.doe@odoopnx.com');
   const A = admin.accessToken, H = hr.accessToken, E = emp.accessToken;
 
   console.log('\n== AUTH ==');
   check('GET  /auth/me', await req('GET', '/auth/me', A), 200);
   check('POST /auth/refresh', await req('POST', '/auth/refresh', null, { refreshToken: admin.refreshToken }), [200, 201]);
   check('GET  /auth/me without a token is rejected', await req('GET', '/auth/me', null), 401);
-  check('POST /auth/login with a bad password is rejected', await req('POST', '/auth/login', null, { email: 'admin@peoplepay360.com', password: 'wrongpassword123' }), 401);
+  check('POST /auth/login with a bad password is rejected', await req('POST', '/auth/login', null, { email: 'admin@odoopnx.com', password: 'wrongpassword123' }), 401);
 
   console.log('\n== READS as ADMIN ==');
   const reads = [
@@ -76,7 +76,7 @@ async function login(email) {
   const depId = dep.json && dep.json.data && dep.json.data.id;
 
   const created = await req('POST', '/employees', A, {
-    name: 'Sweep Tester', workEmail: 'sweep.' + Date.now() + '@peoplepay360.com',
+    name: 'Sweep Tester', workEmail: 'sweep.' + Date.now() + '@odoopnx.com',
     jobPosition: 'Test Engineer', departmentId: depId, employeeType: 'Full-time', status: 'ACTIVE',
   });
   check('POST   /employees', created, [200, 201]);

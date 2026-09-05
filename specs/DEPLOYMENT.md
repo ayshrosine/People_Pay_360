@@ -1,0 +1,140 @@
+# Deploying Odoo PNX to Zerops
+
+Two services from one repository: the NestJS API and the Next.js web app. The
+database stays on **Neon** and object storage on **Cloudflare R2** — Zerops runs
+the code, not the data.
+
+The whole configuration is [`zerops.yml`](../zerops.yml) at the repository root.
+
+---
+
+## 1. Before you start
+
+You need:
+
+- a Zerops account and a project,
+- the `zcli` command line tool (`npm i -g @zerops/zcli`, then `zcli login`),
+- your Neon connection string and R2 credentials.
+
+---
+
+## 2. Create the two services
+
+In the Zerops GUI, add two **Node.js 22** services to your project, named
+exactly:
+
+| Service name | What it runs | Port |
+|---|---|---|
+| `backend` | NestJS API | 4000 |
+| `frontend` | Next.js web app | 3000 |
+
+The names matter: `zerops.yml` refers to them by name, and the cross-references
+`${backend_zeropsSubdomain}` and `${frontend_zeropsSubdomain}` only resolve if
+they match.
+
+Enable the **public subdomain** on both so they get a URL.
+
+---
+
+## 3. Set the secrets
+
+**Never put these in `zerops.yml`** — it is committed to the repository. Add
+them in the GUI under *Service → Environment variables*, as **secret**
+variables.
+
+On `backend`:
+
+| Variable | Required | Notes |
+|---|---|---|
+| `DATABASE_URL` | yes | The Neon pooled connection string |
+| `JWT_ACCESS_SECRET` | yes | 16+ characters |
+| `JWT_REFRESH_SECRET` | yes | 16+ characters, different from the access secret |
+| `R2_ACCOUNT_ID` | for PDFs | Cloudflare account id |
+| `R2_ACCESS_KEY_ID` | for PDFs | |
+| `R2_SECRET_ACCESS_KEY` | for PDFs | |
+| `R2_BUCKET_NAME` | for PDFs | |
+| `R2_ENDPOINT` | for PDFs | `https://<account>.r2.cloudflarestorage.com` |
+| `REDIS_URL` | optional | Without it, payslips compute inline instead of on a queue |
+| `RESEND_API_KEY` | optional | Without it, payslip email is disabled rather than failing |
+| `SENTRY_DSN` | optional | No-ops when absent |
+
+Only the first three are needed to boot. Everything else degrades explicitly.
+
+`zerops.yml` already sets the non-secret variables — `NODE_ENV`, `PORT`,
+`CORS_ORIGIN`, `EMAIL_FROM` — so you do not need to add those.
+
+---
+
+## 4. Deploy
+
+```bash
+zcli push
+```
+
+That builds both services and starts them. On the API's first boot,
+`initCommands` runs:
+
+```bash
+npx prisma db push --skip-generate --accept-data-loss
+```
+
+which applies the Prisma schema to Neon. This project has **no migration
+history table** — the schema is managed with `db push` — so
+`prisma migrate deploy` would find nothing to run. Do not swap it in.
+
+---
+
+## 5. Seed the first deployment
+
+Only once, and only if the database is empty. From a shell on the `backend`
+service:
+
+```bash
+cd backend
+npm run prisma:seed     # base users, employees, salary structure
+npm run seed:demo       # representative staff, attendance and leave
+npm run seed:heads      # a head for each department
+npm run payruns:demo    # payruns created through the real API
+```
+
+Then change the seeded passwords, or delete the demo accounts outright. They
+all use `password123`.
+
+---
+
+## 6. Check it came up
+
+- `https://<backend-subdomain>/api/v1` — the API
+- `https://<backend-subdomain>/api/docs` — Swagger
+- `https://<frontend-subdomain>` — the web app
+
+If the web app loads but every request fails, it is almost always one of two
+things:
+
+1. **`CORS_ORIGIN` does not include the frontend's URL.** `zerops.yml` sets it
+   to `${frontend_zeropsSubdomain}`; add your custom domain alongside it, comma
+   separated, once you have one.
+2. **`NEXT_PUBLIC_API_URL` was wrong at build time.** It is baked into the
+   client bundle during `next build`, so changing it afterwards does nothing —
+   you have to rebuild.
+
+---
+
+## 7. Custom domains
+
+Add the domain in the Zerops GUI, then update `CORS_ORIGIN` on `backend` to
+include it and redeploy the frontend so the new API URL is baked in.
+
+---
+
+## Notes on the build
+
+**`npx prisma generate` runs before `npm run build`.** The generated client is
+what the TypeScript compile imports types from; reversing the order fails.
+
+**`node_modules` is deployed, not rebuilt at runtime.** Zerops caches it between
+builds, which is what keeps deploys quick.
+
+**The frontend is served by `next start`, not a static file server.** Several
+routes are server-rendered on demand — an employee record, a payslip — and a
+static server would return 404 for all of them.
