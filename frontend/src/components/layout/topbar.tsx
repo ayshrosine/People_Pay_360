@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, LogOut, Monitor, Moon, Search, Sun } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, displayName } from '@/lib/utils';
 import { Avatar } from '@/components/ui/primitives';
 import {
   DropdownMenu,
@@ -29,6 +29,7 @@ export function Topbar() {
   const { user, role, logout } = useAuth();
   const { theme, setTheme } = useUiStore();
   const section = useCurrentNavLabel();
+  const name = displayName(user);
   const [paletteOpen, setPaletteOpen] = React.useState(false);
 
   // The palette is the one global shortcut, so it is bound at the shell.
@@ -94,14 +95,10 @@ export function Topbar() {
                   className="flex shrink-0 items-center gap-2.5 rounded-[var(--radius-control)] px-1.5 py-1 transition-colors hover:bg-[var(--surface-hover)]"
                   aria-label="Account menu"
                 >
-                  <Avatar
-                    name={user?.employee?.name ?? user?.email ?? '?'}
-                    src={user?.employee?.avatarUrl}
-                    size={30}
-                  />
+                  <Avatar name={name} src={user?.employee?.avatarUrl} size={30} />
                   <span className="hidden text-left sm:block">
                     <span className="block max-w-[150px] truncate text-[13px] font-semibold leading-tight text-[var(--text-primary)]">
-                      {user?.employee?.name ?? user?.email}
+                      {name}
                     </span>
                     <span className="block font-mono text-[10.5px] leading-tight text-[var(--text-muted)]">
                       {role ? ROLE_LABELS[role] : ''}
@@ -113,7 +110,7 @@ export function Topbar() {
               <DropdownMenuContent align="end" className="min-w-56">
                 <div className="px-2.5 py-2">
                   <p className="truncate text-[13px] font-medium text-[var(--text-primary)]">
-                    {user?.employee?.name ?? user?.email}
+                    {name}
                   </p>
                   <p className="truncate text-[11px] text-[var(--text-tertiary)]">{user?.email}</p>
                 </div>

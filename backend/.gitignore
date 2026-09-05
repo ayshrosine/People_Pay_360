@@ -39,3 +39,6 @@ prisma/migrations/
 # Temporary files
 *.tmp
 *.temp
+
+# Screenshots produced by npm run test:ui
+.ui-shots/

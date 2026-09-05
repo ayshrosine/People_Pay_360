@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { AlertTriangle, Info, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Info, Plus, RotateCcw } from 'lucide-react';
 import { Accent, PageShell, Toolbar } from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, Select } from '@/components/ui/primitives';
@@ -28,7 +28,7 @@ import {
 } from '@/hooks/use-resources';
 import { useFiltersStore } from '@/stores/filters-store';
 import { useAuth } from '@/lib/auth/auth-provider';
-import { formatMoney, formatNumber } from '@/lib/utils';
+import { firstNameOf, formatMoney, formatNumber } from '@/lib/utils';
 import type { DepartmentOverviewRow } from '@/lib/api/types';
 
 const PERIODS = [
@@ -92,8 +92,8 @@ export default function DashboardPage() {
     return Math.max(0, Math.min(100, coverage * 0.7 + 30 - warningPenalty * 0.5 - backlogPenalty * 0.4));
   }, [attendance.data, timeOff.data, blockingCount]);
 
-  const { user } = useAuth();
-  const firstName = (user?.employee?.name ?? user?.email ?? 'there').split(/[\s@.]/)[0];
+  const { user, can } = useAuth();
+  const firstName = firstNameOf(user);
 
   // Rendered on the client only (the shell is a client component), so the
   // viewer's own locale and timezone decide what "today" reads as.
@@ -120,6 +120,16 @@ export default function DashboardPage() {
         </>
       }
       description="Live figures from the HR and payroll flows — no placeholder data."
+      actions={
+        can('create', 'Payrun') ? (
+          <Button asChild variant="primary">
+            <Link href="/payroll/payruns/new">
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+              New payrun
+            </Link>
+          </Button>
+        ) : null
+      }
       toolbar={
         <Toolbar>
           <Select

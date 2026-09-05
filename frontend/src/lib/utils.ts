@@ -115,3 +115,32 @@ export function monthBounds(reference = new Date()): { start: string; end: strin
   const end = new Date(reference.getFullYear(), reference.getMonth() + 1, 0);
   return { start: toISODate(start), end: toISODate(end) };
 }
+
+/**
+ * A person's display name.
+ *
+ * Not every account has an employee record - an administrator is a login, not
+ * a member of staff - so fall back to the readable half of their email rather
+ * than showing a raw address that truncates to nothing useful.
+ */
+export function displayName(user: {
+  employee?: { name?: string | null } | null;
+  email?: string | null;
+} | null | undefined): string {
+  const name = user?.employee?.name?.trim();
+  if (name) return name;
+
+  const local = user?.email?.split('@')[0] ?? '';
+  if (!local) return 'there';
+
+  return local
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+/** The part of a display name used in a greeting. */
+export function firstNameOf(user: Parameters<typeof displayName>[0]): string {
+  return displayName(user).split(' ')[0];
+}
