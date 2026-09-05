@@ -17,89 +17,57 @@ export class DashboardService {
     // Build date range from period
     const dateRange = this.parsePeriod(period);
 
-    // Get total net salary paid
-    const totalNetSalaryPaid = await this.prisma.payslip.aggregate({
-      where: {
-        status: 'PAID',
-        payrun: {
-          periodStart: dateRange.start ? { gte: dateRange.start } : undefined,
-          periodEnd: dateRange.end ? { lte: dateRange.end } : undefined,
-        },
-        employee: {
-          ...(departmentId ? { departmentId } : {}),
-          ...(employeeType ? { employeeType } : {}),
-        },
-      },
-      _sum: {
-        netAmount: true,
-      },
-    });
+    // Every figure below is independent, so they go out together. Against a
+    // serverless Postgres a round-trip costs a few hundred milliseconds, and
+    // awaiting six of them in sequence was what made this endpoint take
+    // seconds rather than one round-trip's worth of time.
+    const payrunWindow = {
+      periodStart: dateRange.start ? { gte: dateRange.start } : undefined,
+      periodEnd: dateRange.end ? { lte: dateRange.end } : undefined,
+    };
+    const employeeFilter = {
+      ...(departmentId ? { departmentId } : {}),
+      ...(employeeType ? { employeeType } : {}),
+    };
+    const attendanceWindow = {
+      ...(dateRange.start && { checkIn: { gte: dateRange.start } }),
+      ...(dateRange.end && { checkIn: { lte: dateRange.end } }),
+      ...(departmentId && { employee: { departmentId } }),
+      ...(employeeType && { employee: { employeeType } }),
+    };
 
-    // Get payslips generated
-    const payslipsGenerated = await this.prisma.payslip.count({
-      where: {
-        payrun: {
-          periodStart: dateRange.start ? { gte: dateRange.start } : undefined,
-          periodEnd: dateRange.end ? { lte: dateRange.end } : undefined,
+    const [
+      totalNetSalaryPaid,
+      payslipsGenerated,
+      avgSalaryResult,
+      approvedTimeOffDays,
+      totalAttendance,
+      presentAttendance,
+    ] = await Promise.all([
+      this.prisma.payslip.aggregate({
+        where: { status: 'PAID', payrun: payrunWindow, employee: employeeFilter },
+        _sum: { netAmount: true },
+      }),
+      this.prisma.payslip.count({
+        where: { payrun: payrunWindow, employee: employeeFilter },
+      }),
+      this.prisma.payslip.aggregate({
+        where: { status: 'PAID', payrun: payrunWindow, employee: employeeFilter },
+        _avg: { netAmount: true },
+      }),
+      this.prisma.timeOffRequest.aggregate({
+        where: {
+          status: 'APPROVED',
+          startDate: dateRange.start ? { gte: dateRange.start } : undefined,
+          endDate: dateRange.end ? { lte: dateRange.end } : undefined,
+          ...(departmentId && { employee: { departmentId } }),
+          ...(employeeType && { employee: { employeeType } }),
         },
-        employee: {
-          ...(departmentId ? { departmentId } : {}),
-          ...(employeeType ? { employeeType } : {}),
-        },
-      },
-    });
-
-    // Get average salary
-    const avgSalaryResult = await this.prisma.payslip.aggregate({
-      where: {
-        status: 'PAID',
-        payrun: {
-          periodStart: dateRange.start ? { gte: dateRange.start } : undefined,
-          periodEnd: dateRange.end ? { lte: dateRange.end } : undefined,
-        },
-        employee: {
-          ...(departmentId ? { departmentId } : {}),
-          ...(employeeType ? { employeeType } : {}),
-        },
-      },
-      _avg: {
-        netAmount: true,
-      },
-    });
-
-    // Get approved time off days
-    const approvedTimeOffDays = await this.prisma.timeOffRequest.aggregate({
-      where: {
-        status: 'APPROVED',
-        startDate: dateRange.start ? { gte: dateRange.start } : undefined,
-        endDate: dateRange.end ? { lte: dateRange.end } : undefined,
-        ...(departmentId && { employee: { departmentId } }),
-        ...(employeeType && { employee: { employeeType } }),
-      },
-      _sum: {
-        duration: true,
-      },
-    });
-
-    // Calculate attendance health percentage
-    const totalAttendance = await this.prisma.attendance.count({
-      where: {
-        ...(dateRange.start && { checkIn: { gte: dateRange.start } }),
-        ...(dateRange.end && { checkIn: { lte: dateRange.end } }),
-        ...(departmentId && { employee: { departmentId } }),
-        ...(employeeType && { employee: { employeeType } }),
-      },
-    });
-
-    const presentAttendance = await this.prisma.attendance.count({
-      where: {
-        status: 'PRESENT',
-        ...(dateRange.start && { checkIn: { gte: dateRange.start } }),
-        ...(dateRange.end && { checkIn: { lte: dateRange.end } }),
-        ...(departmentId && { employee: { departmentId } }),
-        ...(employeeType && { employee: { employeeType } }),
-      },
-    });
+        _sum: { duration: true },
+      }),
+      this.prisma.attendance.count({ where: attendanceWindow }),
+      this.prisma.attendance.count({ where: { status: 'PRESENT', ...attendanceWindow } }),
+    ]);
 
     const attendanceHealthPct = totalAttendance > 0 
       ? (presentAttendance / totalAttendance) * 100 
@@ -217,43 +185,28 @@ export class DashboardService {
   }
 
   async getAlerts() {
-    // Get payslips with errors
-    const errorPayslips = await this.prisma.payslip.findMany({
-      where: {
-        status: 'ERROR',
-      },
-      include: {
-        employee: true,
-        payrun: true,
-      },
-      take: 10,
-    });
-
-    // Get employees without bank details
-    const employeesWithoutBank = await this.prisma.employee.findMany({
-      where: {
-        bankAccount: null,
-        status: 'ACTIVE',
-      },
-      take: 10,
-    });
-
-    // Get contracts ending soon (within 30 days)
+    // Contracts are "ending soon" within the next thirty days.
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-    const contractsEndingSoon = await this.prisma.contract.findMany({
-      where: {
-        status: 'RUNNING',
-        endDate: {
-          lte: thirtyDaysFromNow,
-        },
-      },
-      include: {
-        employee: true,
-      },
-      take: 10,
-    });
+    // Three unrelated lookups; issuing them in sequence cost three network
+    // round-trips to answer one screen.
+    const [errorPayslips, employeesWithoutBank, contractsEndingSoon] = await Promise.all([
+      this.prisma.payslip.findMany({
+        where: { status: 'ERROR' },
+        include: { employee: true, payrun: true },
+        take: 10,
+      }),
+      this.prisma.employee.findMany({
+        where: { bankAccount: null, status: 'ACTIVE' },
+        take: 10,
+      }),
+      this.prisma.contract.findMany({
+        where: { status: 'RUNNING', endDate: { lte: thirtyDaysFromNow } },
+        include: { employee: true },
+        take: 10,
+      }),
+    ]);
 
     return {
       errorPayslips: errorPayslips.map(p => ({
@@ -349,39 +302,41 @@ export class DashboardService {
   }
 
   async getDepartmentOverview() {
-    const departments = await this.prisma.department.findMany({
-      include: {
-        _count: {
-          select: { employees: true },
-        },
-      },
-    });
-
-    const departmentOverviews = await Promise.all(
-      departments.map(async (dept) => {
-        const employees = await this.prisma.employee.findMany({
-          where: { departmentId: dept.id },
-          include: {
-            contracts: {
-              where: { status: 'RUNNING' },
-            },
-          },
-        });
-
-        const totalSalary = employees.reduce((sum, emp) => {
-          const activeContract = emp.contracts[0];
-          return sum + (activeContract ? Number(activeContract.wage) : 0);
-        }, 0);
-
-        return {
-          department: dept.name,
-          headcount: dept._count.employees,
-          totalSalary,
-        };
+    // Previously this ran a query per department. One read of the employees
+    // with their running contract answers the whole thing, and the grouping is
+    // cheaper in memory than another network round-trip per department.
+    const [departments, employees] = await Promise.all([
+      this.prisma.department.findMany({
+        include: { _count: { select: { employees: true } } },
       }),
-    );
+      this.prisma.employee.findMany({
+        select: {
+          departmentId: true,
+          contracts: {
+            where: { status: 'RUNNING' },
+            select: { wage: true },
+            take: 1,
+          },
+        },
+      }),
+    ]);
 
-    return departmentOverviews;
+    const salaryByDepartment = new Map<string, number>();
+    for (const employee of employees) {
+      if (!employee.departmentId) continue;
+      const contract = employee.contracts[0];
+      if (!contract) continue;
+      salaryByDepartment.set(
+        employee.departmentId,
+        (salaryByDepartment.get(employee.departmentId) ?? 0) + Number(contract.wage),
+      );
+    }
+
+    return departments.map((dept) => ({
+      department: dept.name,
+      headcount: dept._count.employees,
+      totalSalary: salaryByDepartment.get(dept.id) ?? 0,
+    }));
   }
 
   private parsePeriod(period?: string): { start?: Date; end?: Date } {

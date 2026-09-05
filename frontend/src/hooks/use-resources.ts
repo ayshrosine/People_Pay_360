@@ -289,7 +289,9 @@ export function useAttendance(params: AttendanceQuery = {}) {
 export function useAttendanceToday(enabled = true) {
   return useQuery({
     queryKey: keys.attendanceToday,
-    queryFn: () => getData<Attendance | null>('/attendance/widget/today'),
+    // `null` is a legitimate answer - nobody has checked in yet today - but
+    // TanStack Query rejects `undefined`, so normalise it.
+    queryFn: async () => (await getData<Attendance | null>('/attendance/widget/today')) ?? null,
     enabled,
     refetchOnWindowFocus: true,
     refetchInterval: 60_000,
@@ -462,10 +464,13 @@ export function useValidateFormula() {
   );
 }
 
-export function usePayruns(params: { status?: string } = {}) {
+export function usePayruns(params: { status?: string } = {}, enabled = true) {
   return useQuery({
     queryKey: keys.payruns(params),
     queryFn: () => getList<Payrun>('/payroll/payruns', { params: clean(params) }),
+    // Self-service roles are forbidden this endpoint; asking anyway just earns
+    // a 403 in the console and a failed query for a filter they never see.
+    enabled,
   });
 }
 

@@ -77,6 +77,7 @@ export class PayslipComputationService {
       payslip.employeeId,
       payrun.periodStart,
       payrun.periodEnd,
+      contract.workingScheduleId,
     );
 
     const rules = payrun.salaryStructure.rules.filter((rule) => rule.active);
@@ -143,14 +144,56 @@ export class PayslipComputationService {
   }
 
   /**
+   * Counts the days in the period that the schedule actually rosters. Schedule
+   * lines store 0 = Monday .. 6 = Sunday, whereas `Date#getDay` uses
+   * 0 = Sunday, hence the rotation. With no schedule attached, a standard
+   * Monday-to-Friday week is the sane default.
+   */
+  private async countWorkingDays(
+    periodStart: Date,
+    periodEnd: Date,
+    workingScheduleId?: string | null,
+  ): Promise<number> {
+    let rosteredDays = new Set([0, 1, 2, 3, 4]);
+
+    if (workingScheduleId) {
+      const lines = await this.prisma.workingScheduleLine.findMany({
+        where: { scheduleId: workingScheduleId },
+        select: { dayOfWeek: true },
+      });
+      if (lines.length > 0) {
+        rosteredDays = new Set(lines.map((line) => line.dayOfWeek));
+      }
+    }
+
+    let count = 0;
+    const cursor = new Date(periodStart);
+    while (cursor <= periodEnd) {
+      if (rosteredDays.has((cursor.getDay() + 6) % 7)) count += 1;
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    // Never zero: a pro-rating formula divides by this.
+    return Math.max(1, count);
+  }
+
+  /**
    * Worked days = distinct days with an attendance record, plus approved leave
    * on a type that does not reduce pay (paid leave still earns salary).
+   *
+   * `totalDays` is the number of *scheduled working* days in the period, not
+   * calendar days. Pro-rating rules divide one by the other, and an employee
+   * who never misses a shift must come out at exactly 1.0 - dividing ~22
+   * attended days by ~30 calendar days would silently dock everyone a quarter
+   * of their salary for working their full contracted month.
    */
-  private async resolveWorkedDays(employeeId: string, periodStart: Date, periodEnd: Date) {
-    const totalDays = Math.max(
-      1,
-      Math.round((periodEnd.getTime() - periodStart.getTime()) / MS_PER_DAY) + 1,
-    );
+  private async resolveWorkedDays(
+    employeeId: string,
+    periodStart: Date,
+    periodEnd: Date,
+    workingScheduleId?: string | null,
+  ) {
+    const totalDays = await this.countWorkingDays(periodStart, periodEnd, workingScheduleId);
 
     const [attendances, approvedLeave] = await Promise.all([
       this.prisma.attendance.findMany({

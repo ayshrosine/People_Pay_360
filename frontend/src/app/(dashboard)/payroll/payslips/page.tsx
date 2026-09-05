@@ -17,13 +17,14 @@ const STATUSES: PayslipStatus[] = ['DRAFT', 'COMPUTED', 'VALIDATED', 'PAID', 'ER
 function PayslipsView() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { selfService } = useAuth();
+  const { selfService, can } = useAuth();
+  const canReadPayruns = can('read', 'Payrun');
 
   const [payrunId, setPayrunId] = React.useState(searchParams.get('payrunId') ?? '');
   const [employeeId, setEmployeeId] = React.useState(searchParams.get('employeeId') ?? '');
   const [status, setStatus] = React.useState('');
 
-  const payruns = usePayruns();
+  const payruns = usePayruns({}, canReadPayruns);
   const employees = useEmployees({ limit: 200 });
   const payslips = usePayslips({
     payrunId: payrunId || undefined,
@@ -44,19 +45,21 @@ function PayslipsView() {
       }
       toolbar={
         <Toolbar>
-          <Select
-            aria-label="Payrun"
-            className="w-52"
-            value={payrunId}
-            onChange={(event) => setPayrunId(event.target.value)}
-          >
-            <option value="">All payruns</option>
-            {payruns.data?.data.map((payrun) => (
-              <option key={payrun.id} value={payrun.id}>
-                {payrun.name}
-              </option>
-            ))}
-          </Select>
+          {canReadPayruns ? (
+            <Select
+              aria-label="Payrun"
+              className="w-52"
+              value={payrunId}
+              onChange={(event) => setPayrunId(event.target.value)}
+            >
+              <option value="">All payruns</option>
+              {payruns.data?.data.map((payrun) => (
+                <option key={payrun.id} value={payrun.id}>
+                  {payrun.name}
+                </option>
+              ))}
+            </Select>
+          ) : null}
 
           {!selfService ? (
             <Select

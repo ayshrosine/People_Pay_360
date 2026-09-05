@@ -181,6 +181,15 @@ export class EmployeesService {
     });
   }
 
+  /**
+   * Deletes an employee only while they have no history worth keeping.
+   *
+   * Payroll records are legal documents and attendance is an audit trail, so an
+   * employee who has either must be archived rather than erased - otherwise a
+   * paid payslip would lose the person it belongs to. Attempting it previously
+   * surfaced a raw Prisma foreign-key error as a 500; the caller deserves to be
+   * told what is holding the record and what to do instead.
+   */
   async remove(id: string) {
     const employee = await this.prisma.employee.findUnique({
       where: { id },
@@ -189,6 +198,39 @@ export class EmployeesService {
     if (!employee) {
       throw new NotFoundException({ message: 'Employee not found', code: 'NOT_FOUND' });
     }
+
+    const [payslips, attendance, contracts, allocations, requests] = await Promise.all([
+      this.prisma.payslip.count({ where: { employeeId: id } }),
+      this.prisma.attendance.count({ where: { employeeId: id } }),
+      this.prisma.contract.count({ where: { employeeId: id } }),
+      this.prisma.timeOffAllocation.count({ where: { employeeId: id } }),
+      this.prisma.timeOffRequest.count({ where: { employeeId: id } }),
+    ]);
+
+    const blockers = [
+      payslips && `${payslips} payslip(s)`,
+      contracts && `${contracts} contract(s)`,
+      attendance && `${attendance} attendance record(s)`,
+      allocations && `${allocations} time-off allocation(s)`,
+      requests && `${requests} time-off request(s)`,
+    ].filter(Boolean) as string[];
+
+    if (blockers.length > 0) {
+      throw new ConflictException({
+        message:
+          `${employee.name} still has ${blockers.join(', ')} and cannot be deleted. ` +
+          'Set their status to TERMINATED to archive them instead - payroll history must be preserved.',
+        code: 'EMPLOYEE_HAS_RECORDS',
+        details: { payslips, contracts, attendance, allocations, requests },
+      });
+    }
+
+    // Managers are optional, so detaching reports is safe and keeps the delete
+    // from failing on a self-referential foreign key.
+    await this.prisma.employee.updateMany({
+      where: { managerId: id },
+      data: { managerId: null },
+    });
 
     return this.prisma.employee.delete({
       where: { id },

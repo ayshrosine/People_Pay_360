@@ -48,6 +48,9 @@ export class AuthService {
         id: user.id,
         email: user.email,
         role: user.role,
+        // Kept flat as well as nested so this matches the shape /auth/me
+        // returns; self-service scoping is keyed on it.
+        employeeId: user.employeeId,
         employee: user.employee,
       },
     };

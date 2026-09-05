@@ -48,9 +48,14 @@ export function KpiRail({
                 index % 2 === 1 && 'sm:border-l sm:border-[var(--border-subtle)]',
               )}
             >
-              <p className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                {item?.label ?? <Skeleton className="h-3 w-24" />}
-              </p>
+              {item?.label ? (
+                <p className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]">
+                  {item.label}
+                </p>
+              ) : (
+                // A <div> placeholder cannot live inside a <p>.
+                <Skeleton className="h-3 w-24" />
+              )}
               {loading ? (
                 <Skeleton className="mt-2 h-7 w-28" />
               ) : (
@@ -417,9 +422,15 @@ export function StatGrid({
         const item = raw as (typeof items)[number] | undefined;
         return (
           <div key={item?.label ?? index} className="bg-[var(--surface-base)] px-3 py-2.5">
-            <p className="font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-              {item?.label ?? <Skeleton className="h-2.5 w-14" />}
-            </p>
+            {item?.label ? (
+              <p className="font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
+                {item.label}
+              </p>
+            ) : (
+              // The placeholder is a <div>, which is invalid inside a <p> and
+              // triggered a hydration mismatch when it sat in the label slot.
+              <Skeleton className="h-2.5 w-14" />
+            )}
             {loading ? (
               <Skeleton className="mt-1.5 h-5 w-10" />
             ) : (

@@ -297,8 +297,11 @@ async function main() {
             code: 'BASIC',
             category: SalaryCategory.BASIC,
             sequence: 1,
-            computationType: ComputationType.FIXED,
-            amount: 50000,
+            // Derived from the employee's contract wage, pro-rated by the days
+            // actually worked in the period. A fixed amount here would pay every
+            // employee the same regardless of their contract, which is wrong.
+            computationType: ComputationType.FORMULA,
+            formula: 'basicWage * (workedDays / totalDays)',
             active: true,
           },
           {
