@@ -85,221 +85,227 @@ enum ComputationType {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  passwordHash  String
-  role          RoleName
-  employee      Employee? @relation(fields: [employeeId], references: [id])
-  employeeId    String?  @unique
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  role         RoleName
+  employee     Employee? @relation(fields: [employeeId], references: [id])
+  employeeId   String?   @unique
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Department {
   id        String     @id @default(uuid())
   name      String
+  // The employee who leads this department. They may approve and refuse leave
+  // for anyone in it, which is authority the CASL role grid cannot express -
+  // "head of Engineering" is a relationship, not a role.
+  headId    String?    @unique
+  head      Employee?  @relation("DepartmentHead", fields: [headId], references: [id])
   employees Employee[]
 }
 
 model Employee {
-  id             String          @id @default(uuid())
-  name           String
-  workEmail      String          @unique
-  jobPosition    String?
-  departmentId   String?
-  department     Department?     @relation(fields: [departmentId], references: [id])
-  managerId      String?
-  manager        Employee?       @relation("ManagerReports", fields: [managerId], references: [id])
-  reports        Employee[]      @relation("ManagerReports")
+  id                String              @id @default(uuid())
+  name              String
+  workEmail         String              @unique
+  jobPosition       String?
+  departmentId      String?
+  department        Department?         @relation(fields: [departmentId], references: [id])
+  managerId         String?
+  manager           Employee?           @relation("ManagerReports", fields: [managerId], references: [id])
+  reports           Employee[]          @relation("ManagerReports")
+  headOfDepartment  Department?         @relation("DepartmentHead")
   workingScheduleId String?
-  workingSchedule WorkingSchedule? @relation(fields: [workingScheduleId], references: [id])
-  status         EmployeeStatus  @default(ACTIVE)
-  avatarUrl      String?
-  phone          String?
-  employeeType   String?         // e.g. Full-time, Contract, Intern — used in dashboard filters
-  bankAccount    String?
-  bankIfsc       String?
-  user           User?
-  contracts      Contract[]
-  attendances    Attendance[]
-  timeOffRequests TimeOffRequest[]
-  allocations    TimeOffAllocation[]
-  payslips       Payslip[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  workingSchedule   WorkingSchedule?    @relation(fields: [workingScheduleId], references: [id])
+  status            EmployeeStatus      @default(ACTIVE)
+  avatarUrl         String?
+  phone             String?
+  employeeType      String? // e.g. Full-time, Contract, Intern — used in dashboard filters
+  bankAccount       String?
+  bankIfsc          String?
+  user              User?
+  contracts         Contract[]
+  attendances       Attendance[]
+  timeOffRequests   TimeOffRequest[]
+  allocations       TimeOffAllocation[]
+  payslips          Payslip[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }
 
 model WorkingSchedule {
-  id            String     @id @default(uuid())
-  name          String
-  company       String     @default("My Company")
-  timezone      String     @default("Asia/Kolkata")
-  scheduleType  String     @default("Fixed") // Fixed | Flexible | Full Flexible
-  totalWeeklyHours Float   // auto-calculated from WorkingScheduleLine on save
-  status        String     @default("Active")
-  lines         WorkingScheduleLine[]
-  employees     Employee[]
-  contracts     Contract[]
+  id               String                @id @default(uuid())
+  name             String
+  company          String                @default("My Company")
+  timezone         String                @default("Asia/Kolkata")
+  scheduleType     String                @default("Fixed") // Fixed | Flexible | Full Flexible
+  totalWeeklyHours Float // auto-calculated from WorkingScheduleLine on save
+  status           String                @default("Active")
+  lines            WorkingScheduleLine[]
+  employees        Employee[]
+  contracts        Contract[]
 }
 
 model WorkingScheduleLine {
-  id           String   @id @default(uuid())
+  id           String          @id @default(uuid())
   scheduleId   String
   schedule     WorkingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  dayOfWeek    Int      // 0=Mon .. 6=Sun
-  startTime    String   // "09:00"
-  endTime      String   // "18:00"
-  breakMinutes Int      @default(60)
+  dayOfWeek    Int // 0=Mon .. 6=Sun
+  startTime    String // "09:00"
+  endTime      String // "18:00"
+  breakMinutes Int             @default(60)
 }
 
 model Contract {
-  id               String         @id @default(uuid())
-  employeeId       String
-  employee         Employee       @relation(fields: [employeeId], references: [id])
-  department       String?
-  jobPosition      String?
-  startDate        DateTime
-  endDate          DateTime?      // null = open-ended
-  wage             Decimal        @db.Decimal(12,2)
-  wageType         String         @default("Monthly") // Monthly | Hourly
+  id                String           @id @default(uuid())
+  employeeId        String
+  employee          Employee         @relation(fields: [employeeId], references: [id])
+  department        String?
+  jobPosition       String?
+  startDate         DateTime
+  endDate           DateTime? // null = open-ended
+  wage              Decimal          @db.Decimal(12, 2)
+  wageType          String           @default("Monthly") // Monthly | Hourly
   salaryStructureId String?
-  salaryStructure  SalaryStructure? @relation(fields: [salaryStructureId], references: [id])
+  salaryStructure   SalaryStructure? @relation(fields: [salaryStructureId], references: [id])
   workingScheduleId String?
-  workingSchedule  WorkingSchedule? @relation(fields: [workingScheduleId], references: [id])
-  status           ContractStatus @default(DRAFT)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  workingSchedule   WorkingSchedule? @relation(fields: [workingScheduleId], references: [id])
+  status            ContractStatus   @default(DRAFT)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 }
 
 model Attendance {
-  id            String   @id @default(uuid())
-  employeeId    String
-  employee      Employee @relation(fields: [employeeId], references: [id])
-  checkIn       DateTime
-  checkOut      DateTime?
-  workedHours   Float?   // computed on checkout
-  status        AttendanceStatus @default(PRESENT)
-  isManualEdit  Boolean  @default(false)
-  editedById    String?
-  notes         String?
-  createdAt     DateTime @default(now())
+  id           String           @id @default(uuid())
+  employeeId   String
+  employee     Employee         @relation(fields: [employeeId], references: [id])
+  checkIn      DateTime
+  checkOut     DateTime?
+  workedHours  Float? // computed on checkout
+  status       AttendanceStatus @default(PRESENT)
+  isManualEdit Boolean          @default(false)
+  editedById   String?
+  notes        String?
+  createdAt    DateTime         @default(now())
 }
 
 model TimeOffType {
-  id                 String   @id @default(uuid())
+  id                 String              @id @default(uuid())
   name               String
-  unit               TimeOffUnit @default(DAYS)
-  requiresAllocation Boolean  @default(true)
-  requiresApproval   Boolean  @default(true)
-  affectsPayroll     Boolean  @default(true)
-  colorHex           String   @default("#6366F1")
+  unit               TimeOffUnit         @default(DAYS)
+  requiresAllocation Boolean             @default(true)
+  requiresApproval   Boolean             @default(true)
+  affectsPayroll     Boolean             @default(true)
+  colorHex           String              @default("#6366F1")
   allocations        TimeOffAllocation[]
   requests           TimeOffRequest[]
 }
 
 model TimeOffAllocation {
-  id            String   @id @default(uuid())
+  id            String      @id @default(uuid())
   employeeId    String
-  employee      Employee @relation(fields: [employeeId], references: [id])
+  employee      Employee    @relation(fields: [employeeId], references: [id])
   timeOffTypeId String
   timeOffType   TimeOffType @relation(fields: [timeOffTypeId], references: [id])
   allocated     Float
-  taken         Float    @default(0)   // derived, recalculated on approval
-  remaining     Float    @default(0)   // derived = allocated - taken
+  taken         Float       @default(0) // derived, recalculated on approval
+  remaining     Float       @default(0) // derived = allocated - taken
   validFrom     DateTime
   validTo       DateTime?
-  status        String   @default("To Approve") // To Approve | Approved | Refused
+  status        String      @default("To Approve") // To Approve | Approved | Refused
 }
 
 model TimeOffRequest {
-  id            String   @id @default(uuid())
+  id            String               @id @default(uuid())
   employeeId    String
-  employee      Employee @relation(fields: [employeeId], references: [id])
+  employee      Employee             @relation(fields: [employeeId], references: [id])
   timeOffTypeId String
-  timeOffType   TimeOffType @relation(fields: [timeOffTypeId], references: [id])
+  timeOffType   TimeOffType          @relation(fields: [timeOffTypeId], references: [id])
   startDate     DateTime
   endDate       DateTime
-  duration      Float    // in unit of TimeOffType
+  duration      Float // in unit of TimeOffType
   status        TimeOffRequestStatus @default(TO_APPROVE)
   reason        String?
   approvedById  String?
   approvedAt    DateTime?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime             @default(now())
 }
 
 model SalaryStructure {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   name        String
   description String?
-  isActive    Boolean  @default(true)
+  isActive    Boolean      @default(true)
   rules       SalaryRule[]
   contracts   Contract[]
   payruns     Payrun[]
 }
 
 model SalaryRule {
-  id               String          @id @default(uuid())
-  structureId      String
-  structure        SalaryStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
-  name             String
-  code             String          // e.g. "BASIC", "HRA", "PF", "NET" — unique within a structure
-  category         SalaryCategory
-  sequence         Int
-  computationType  ComputationType
-  amount           Decimal?        @db.Decimal(12,2)   // FIXED
-  percentageOf     String?                              // PERCENTAGE: code to base off
-  percentageValue  Decimal?        @db.Decimal(5,2)
-  formula          String?                              // FORMULA: safe expression string
-  condition        String?                              // optional guard expression
-  active           Boolean         @default(true)
+  id              String          @id @default(uuid())
+  structureId     String
+  structure       SalaryStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  name            String
+  code            String // e.g. "BASIC", "HRA", "PF", "NET" — unique within a structure
+  category        SalaryCategory
+  sequence        Int
+  computationType ComputationType
+  amount          Decimal?        @db.Decimal(12, 2) // FIXED
+  percentageOf    String? // PERCENTAGE: code to base off
+  percentageValue Decimal?        @db.Decimal(5, 2)
+  formula         String? // FORMULA: safe expression string
+  condition       String? // optional guard expression
+  active          Boolean         @default(true)
 
   @@unique([structureId, code])
 }
 
 model Payrun {
-  id                String   @id @default(uuid())
-  name              String   // e.g. "February 2026"
+  id                String          @id @default(uuid())
+  name              String // e.g. "February 2026"
   periodStart       DateTime
   periodEnd         DateTime
   salaryStructureId String
   salaryStructure   SalaryStructure @relation(fields: [salaryStructureId], references: [id])
-  employeeType      String?  // scope filter used at creation
-  status            PayrunStatus @default(DRAFT)
+  employeeType      String? // scope filter used at creation
+  status            PayrunStatus    @default(DRAFT)
   payslips          Payslip[]
   createdById       String
-  createdAt         DateTime @default(now())
+  createdAt         DateTime        @default(now())
   validatedAt       DateTime?
   paidAt            DateTime?
 }
 
 model Payslip {
-  id            String   @id @default(uuid())
-  payrunId      String
-  payrun        Payrun   @relation(fields: [payrunId], references: [id])
-  employeeId    String
-  employee      Employee @relation(fields: [employeeId], references: [id])
-  contractId    String
-  workedDays    Float
-  grossAmount   Decimal  @db.Decimal(12,2)
-  netAmount     Decimal  @db.Decimal(12,2)
-  status        PayslipStatus @default(DRAFT)
-  warnings      Json?    // [{ code: "MISSING_BANK_DETAILS", message: "..." }]
-  lines         PayslipLine[]
-  pdfUrl        String?  // Cloudflare R2 object URL, set after PDF job completes
-  emailSentAt   DateTime?
-  createdAt     DateTime @default(now())
+  id          String        @id @default(uuid())
+  payrunId    String
+  payrun      Payrun        @relation(fields: [payrunId], references: [id])
+  employeeId  String
+  employee    Employee      @relation(fields: [employeeId], references: [id])
+  contractId  String
+  workedDays  Float
+  grossAmount Decimal       @db.Decimal(12, 2)
+  netAmount   Decimal       @db.Decimal(12, 2)
+  status      PayslipStatus @default(DRAFT)
+  warnings    Json? // [{ code: "MISSING_BANK_DETAILS", message: "..." }]
+  lines       PayslipLine[]
+  pdfUrl      String? // Cloudflare R2 object URL, set after PDF job completes
+  emailSentAt DateTime?
+  createdAt   DateTime      @default(now())
 
   @@unique([payrunId, employeeId]) // prevents duplicate payslips
 }
 
 model PayslipLine {
-  id         String   @id @default(uuid())
-  payslipId  String
-  payslip    Payslip  @relation(fields: [payslipId], references: [id], onDelete: Cascade)
-  ruleCode   String
-  label      String
-  category   SalaryCategory
-  amount     Decimal  @db.Decimal(12,2)
-  sequence   Int
+  id        String         @id @default(uuid())
+  payslipId String
+  payslip   Payslip        @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+  ruleCode  String
+  label     String
+  category  SalaryCategory
+  amount    Decimal        @db.Decimal(12, 2)
+  sequence  Int
 }

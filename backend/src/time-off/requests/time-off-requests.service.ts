@@ -1,31 +1,82 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTimeOffRequestDto } from './dto/create-time-off-request.dto';
-import { TimeOffRequestStatus } from '@prisma/client';
+import { TimeOffRequestStatus, Prisma } from '@prisma/client';
+import { DepartmentHeadService } from '../../common/abilities/department-head.service';
+import { RequestUser } from '../../common/abilities/ability.factory';
+
+/** Roles that legitimately see every employee's leave. */
+const HR_ROLES = ['ADMIN', 'HR_MANAGER', 'HR_PAYROLL_USER', 'HR_PAYROLL_MANAGER'];
 
 @Injectable()
 export class TimeOffRequestsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly departmentHeads: DepartmentHeadService,
+  ) {}
 
-  async findAll(employeeId?: string, status?: string) {
-    const where: any = {};
-    
-    if (employeeId) {
-      where.employeeId = employeeId;
+  /**
+   * Restricts a listing to what the caller may actually see.
+   *
+   * "May this role read leave requests" and "may this role read *this* leave
+   * request" are different questions. HR sees everything; a department head
+   * sees their own department plus their own requests; everyone else sees only
+   * their own.
+   */
+  private async scopeFor(
+    user: RequestUser | undefined | null,
+  ): Promise<Prisma.TimeOffRequestWhereInput | null> {
+    if (user && HR_ROLES.includes(user.role)) return null;
+
+    const departmentIds = await this.departmentHeads.departmentsHeadedBy(user);
+    // A user with no employee record matches nothing rather than everything.
+    const own = user?.employeeId ?? '__no_employee__';
+
+    if (departmentIds.length > 0) {
+      return {
+        OR: [{ employeeId: own }, { employee: { departmentId: { in: departmentIds } } }],
+      };
     }
-    
-    if (status) {
-      where.status = status;
-    }
+
+    return { employeeId: own };
+  }
+
+  async findAll(employeeId?: string, status?: string, user?: RequestUser | null) {
+    const filters: Prisma.TimeOffRequestWhereInput[] = [];
+
+    if (employeeId) filters.push({ employeeId });
+    if (status) filters.push({ status: status as TimeOffRequestStatus });
+
+    const scope = await this.scopeFor(user);
+    if (scope) filters.push(scope);
 
     return this.prisma.timeOffRequest.findMany({
-      where,
+      where: filters.length ? { AND: filters } : {},
       include: {
-        employee: true,
+        employee: { include: { department: true } },
         timeOffType: true,
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  /**
+   * Whoever may decide this request. HR always may; the head of the requester's
+   * department may for their own people, but never for themselves.
+   */
+  async assertMayDecide(id: string, user: RequestUser | undefined | null): Promise<void> {
+    if (user && HR_ROLES.includes(user.role)) return;
+
+    const request = await this.prisma.timeOffRequest.findUnique({
+      where: { id },
+      select: { employeeId: true },
+    });
+
+    if (!request) {
+      throw new NotFoundException({ message: 'Time off request not found', code: 'NOT_FOUND' });
+    }
+
+    await this.departmentHeads.assertLeads(user, request.employeeId);
   }
 
   async findOne(id: string) {

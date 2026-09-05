@@ -4,6 +4,7 @@ import * as React from 'react';
 import { ArrowRight, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/primitives';
+import { LatticeBackground } from '@/components/layout/lattice-background';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { normaliseError } from '@/lib/api/client';
 
@@ -49,8 +50,10 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-dvh bg-[var(--surface-canvas)] px-4 py-6">
-      <div className="flex items-center gap-2.5">
+    <main className="relative min-h-dvh overflow-hidden bg-[var(--surface-canvas)] px-4 py-6">
+      <LatticeBackground />
+
+      <div className="relative flex items-center gap-2.5">
         <div className="grid h-8 w-8 place-items-center rounded-[7px] bg-[var(--accent)]">
           <span className="font-mono text-[13px] font-bold text-white">P</span>
         </div>
@@ -59,8 +62,10 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <div className="grid place-items-center px-1 py-10 sm:py-16">
-        <div className="w-full max-w-[440px] rounded-[var(--radius-overlay)] border border-[var(--border-subtle)] bg-[var(--surface-base)] p-7 sm:p-9">
+      <div className="relative grid place-items-center px-1 py-10 sm:py-16">
+        {/* Translucent over the lattice, so the grid reads through the card
+            edges without ever competing with the form. */}
+        <div className="w-full max-w-[440px] rounded-[var(--radius-overlay)] border border-[var(--border-default)] bg-[var(--surface-base)]/85 p-7 shadow-[var(--shadow-overlay)] backdrop-blur-xl sm:p-9">
           <p className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
             HR &amp; Payroll · v1.0
           </p>

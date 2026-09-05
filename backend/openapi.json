@@ -2470,6 +2470,11 @@
           "name": {
             "type": "string",
             "example": "Engineering"
+          },
+          "headId": {
+            "type": "string",
+            "example": "employee-4",
+            "description": "Employee who leads this department and may decide its leave requests."
           }
         },
         "required": [
@@ -2482,6 +2487,12 @@
           "name": {
             "type": "string",
             "example": "Engineering"
+          },
+          "headId": {
+            "type": "object",
+            "example": "employee-4",
+            "nullable": true,
+            "description": "Employee who leads this department. Send null to remove the head."
           }
         }
       },

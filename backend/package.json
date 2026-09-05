@@ -28,7 +28,8 @@
     "seed:demo": "node prisma/seed-demo.js",
     "payruns:demo": "node scripts/create-payruns.js",
     "test:api": "node test/api-e2e.js",
-    "test:ui": "node test/ui-e2e.js"
+    "test:ui": "node test/ui-e2e.js",
+    "seed:heads": "node prisma/seed-heads.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1127.0",

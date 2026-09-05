@@ -2,8 +2,12 @@ import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, HttpCode, 
 import { TimeOffRequestsService } from './time-off-requests.service';
 import { CreateTimeOffRequestDto } from './dto/create-time-off-request.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { CheckAbility } from '../../common/decorators/check-ability.decorator';
+import {
+  AllowDepartmentHead,
+  CheckAbility,
+} from '../../common/decorators/check-ability.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RequestUser } from '../../common/abilities/ability.factory';
 
 @Controller('time-off/requests')
 @UseGuards(JwtAuthGuard)
@@ -13,10 +17,13 @@ export class TimeOffRequestsController {
   @Get()
   @CheckAbility({ action: 'read', subject: 'TimeOffRequest' })
   async findAll(
+    @CurrentUser() user: RequestUser,
     @Query('employeeId') employeeId?: string,
     @Query('status') status?: string,
   ) {
-    return this.timeOffRequestsService.findAll(employeeId, status);
+    // Scoping happens in the service: reading the endpoint is not the same as
+    // being allowed to read every row it could return.
+    return this.timeOffRequestsService.findAll(employeeId, status, user);
   }
 
   @Get(':id')
@@ -35,15 +42,21 @@ export class TimeOffRequestsController {
 
   @Patch(':id/approve')
   @CheckAbility({ action: 'update', subject: 'TimeOffRequest' })
+  @AllowDepartmentHead()
   @HttpCode(HttpStatus.OK)
-  async approve(@Param('id') id: string, @CurrentUser() user: any) {
+  async approve(@Param('id') id: string, @CurrentUser() user: RequestUser) {
+    // The guard only lets a department head this far; whether they lead *this*
+    // employee's department is decided here, per record.
+    await this.timeOffRequestsService.assertMayDecide(id, user);
     return this.timeOffRequestsService.approve(id, user.id);
   }
 
   @Patch(':id/refuse')
   @CheckAbility({ action: 'update', subject: 'TimeOffRequest' })
+  @AllowDepartmentHead()
   @HttpCode(HttpStatus.OK)
-  async refuse(@Param('id') id: string, @CurrentUser() user: any) {
+  async refuse(@Param('id') id: string, @CurrentUser() user: RequestUser) {
+    await this.timeOffRequestsService.assertMayDecide(id, user);
     return this.timeOffRequestsService.refuse(id, user.id);
   }
 }

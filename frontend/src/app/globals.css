@@ -67,6 +67,15 @@
     0 0 0 1px rgba(16, 20, 32, 0.06), 0 8px 24px -8px rgba(16, 20, 32, 0.16),
     0 2px 6px -2px rgba(16, 20, 32, 0.08);
 
+
+  /* Sign-in lattice. Decorative only; defined per theme so the login screen
+     is never a dark rectangle sitting in a light app. */
+  --lattice-line: rgba(79, 70, 229, 0.16);
+  --lattice-node: rgba(79, 70, 229, 0.55);
+  --lattice-node-bright: rgba(37, 99, 235, 0.9);
+  --lattice-wash-top: rgba(79, 70, 229, 0.07);
+  --lattice-wash-bottom: rgba(59, 130, 246, 0.12);
+
   /* Entering motion. ease-in delays the frame the user is watching. */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -115,6 +124,12 @@
     --status-neutral: #94a0b8;
     --status-neutral-bg: rgba(148, 160, 184, 0.1);
 
+    --lattice-line: rgba(125, 155, 255, 0.30);
+    --lattice-node: rgba(147, 178, 255, 0.95);
+    --lattice-node-bright: rgba(120, 200, 255, 1);
+    --lattice-wash-top: rgba(30, 58, 160, 0.42);
+    --lattice-wash-bottom: rgba(37, 99, 235, 0.34);
+
     /* Depth shadows do not read on dark; a ring does the work. */
     --shadow-overlay:
       0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 40px -12px rgba(0, 0, 0, 0.7);
@@ -160,6 +175,13 @@
   --status-info-bg: rgba(56, 189, 248, 0.12);
   --status-neutral: #94a0b8;
   --status-neutral-bg: rgba(148, 160, 184, 0.1);
+
+
+  --lattice-line: rgba(125, 155, 255, 0.30);
+  --lattice-node: rgba(147, 178, 255, 0.95);
+  --lattice-node-bright: rgba(120, 200, 255, 1);
+  --lattice-wash-top: rgba(30, 58, 160, 0.42);
+  --lattice-wash-bottom: rgba(37, 99, 235, 0.34);
 
   --shadow-overlay:
     0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 40px -12px rgba(0, 0, 0, 0.7);
@@ -303,4 +325,25 @@ table th {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* The sign-in lattice: nodes drift in and out of glow on their own cycle, so
+   the field never pulses in unison. Opacity only - nothing here can reflow the
+   page, and the global reduced-motion rule stills it completely. */
+@keyframes lattice-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.lattice-node {
+  opacity: 0.25;
+  animation-name: lattice-pulse;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  will-change: opacity;
 }
