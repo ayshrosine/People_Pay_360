@@ -1,209 +1,171 @@
-# PeoplePay360 - HR & Payroll Management System
+# PeoplePay360
 
-A production-grade HR and Payroll management system built with NestJS, PostgreSQL, and Prisma.
+HR and payroll operations in one place: employees, contracts, working schedules,
+attendance, time off, and a payroll engine where **salary rules actually drive
+payslip computation**.
 
-## 🏗️ Architecture
+```
+people_pay/
+├── backend/    NestJS + Prisma + Neon Postgres   → http://localhost:4000/api/v1
+├── frontend/   Next.js 16 + Tailwind v4 + TanStack Query → http://localhost:3000
+└── specs/      Product spec, architecture notes and the source mockups
+```
 
-This project follows a modular monolith architecture with clear separation of concerns:
+---
 
-- **HR Core**: Employees, Departments, Contracts, Working Schedules
-- **Attendance**: Check-in/check-out, manual corrections, attendance tracking
-- **Time Off**: Leave types, allocations, requests, approval workflow
-- **Payroll**: Salary structures, rules, payruns, payslips, rule engine
-- **Dashboard**: Analytics and reporting endpoints
+## Running it
 
-## 🚀 Quick Start
+Both halves need to be running. Start the API first — the web app is a client of it.
 
-### Prerequisites
-
-- Node.js 24+
-- PostgreSQL 16
-- Redis (for job queues)
-- Docker (optional, for local PostgreSQL)
-
-### Installation
+### 1. Backend
 
 ```bash
 cd backend
 npm install
-```
-
-### Environment Setup
-
-Create a `.env` file in the backend directory:
-
-```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/peoplepay360
-JWT_ACCESS_SECRET=your-super-secret-access-key-change-in-production
-JWT_REFRESH_SECRET=your-super-secret-refresh-key-change-in-production
-JWT_ACCESS_EXPIRY=15m
-JWT_REFRESH_EXPIRY=7d
-REDIS_URL=redis://localhost:6379
-CORS_ORIGIN=http://localhost:3000
-```
-
-### Database Setup
-
-```bash
-# Start PostgreSQL (using Docker)
-docker run --name peoplepay360-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=peoplepay360 -p 5432:5432 -d postgres:16
-
-# Generate Prisma client
+cp .env.example .env      # fill in DATABASE_URL and the two JWT secrets
 npx prisma generate
-
-# Push schema to database
-npx prisma db push
-
-# Seed database with test data
-npx prisma db seed
-```
-
-### Running the Application
-
-```bash
-# Development mode
+npx prisma db push        # creates the schema on Neon
+npm run prisma:seed       # demo employees, contracts, salary structure
 npm run start:dev
-
-# Production mode
-npm run build
-npm run start:prod
 ```
 
-The API will be available at `http://localhost:4000/api/v1`
+Only three variables are required: `DATABASE_URL`, `JWT_ACCESS_SECRET` and
+`JWT_REFRESH_SECRET` (16+ characters each). Redis, Cloudflare R2, Resend and
+Sentry are **optional** — the app boots and works without them, and each
+feature degrades explicitly rather than crashing at startup.
 
-API documentation (Swagger): `http://localhost:4000/api/docs`
+Once running:
 
-## 🧪 Testing
+- API — `http://localhost:4000/api/v1`
+- Swagger UI — `http://localhost:4000/api/docs`
+- OpenAPI JSON — `http://localhost:4000/api/docs-json`
 
-### Postman Collection
-
-A comprehensive Postman collection is available for testing:
+### 2. Frontend
 
 ```bash
-# Install Newman CLI
-npm install -g newman
-
-# Run tests
-cd backend
-newman run PeoplePay360_API.postman_collection.json -e PeoplePay360.postman_environment.json
+cd frontend
+npm install
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL points at the API
+npm run dev
 ```
 
-### Test Users
+### Demo accounts
 
-The database seed creates the following test users:
+Seeded by `npm run prisma:seed`:
 
-- **Admin**: `admin@peoplepay360.com` / `password123`
-- **HR Manager**: `hr.manager@peoplepay360.com` / `ChangeMe123!`
-- **HR Payroll User**: `hrpayroll@peoplepay360.com` / `password123`
-- **HR Payroll Manager**: `hrpayrollmanager@peoplepay360.com` / `password123`
-- **Employees**: `john.doe@peoplepay360.com`, `jane.smith@peoplepay360.com`, `bob.wilson@peoplepay360.com` / `password123`
+| Email | Role | Password |
+|---|---|---|
+| `admin@peoplepay360.com` | Administrator | `password123` |
+| `hrpayroll@peoplepay360.com` | HR Payroll User | `password123` |
+| `john.doe@peoplepay360.com` | Employee | `password123` |
 
-## 📁 Project Structure
+Roles change what you see: an administrator lands on the payroll dashboard, an
+employee lands on their own attendance and can only ever read their own records.
 
-```
-people_pay/
-├── backend/                 # NestJS backend application
-│   ├── src/
-│   │   ├── common/         # Shared utilities, guards, decorators
-│   │   ├── auth/           # Authentication & JWT
-│   │   ├── users/          # User management
-│   │   ├── employees/      # Employee CRUD
-│   │   ├── departments/    # Department management
-│   │   ├── contracts/      # Contract management
-│   │   ├── working-schedules/  # Working schedules
-│   │   ├── attendance/     # Attendance tracking
-│   │   ├── time-off/       # Leave management
-│   │   ├── payroll/        # Payroll engine
-│   │   ├── dashboard/      # Analytics
-│   │   ├── files/          # File storage (mocked)
-│   │   ├── jobs/           # Background jobs
-│   │   └── prisma/         # Prisma service
-│   ├── prisma/
-│   │   ├── schema.prisma   # Database schema
-│   │   └── seed.ts         # Database seeding
-│   └── package.json
-└── specs/                  # Project documentation
-    ├── PeoplePay360_Architecture_TechStack.md
-    ├── PeoplePay360_Backend_Guide.md
-    ├── HRMS OXP - 24 hours.svg
-    └── HRMS OXP - 24 hours.png
+---
+
+## Infrastructure
+
+| Concern | Service | Notes |
+|---|---|---|
+| Database | **Neon** (serverless Postgres) | Standard `postgresql://` URL against the pooled endpoint. Schema is applied with `prisma db push`, so there is no migration history table. |
+| ORM | **Prisma** | `backend/prisma/schema.prisma` is the single source of truth. |
+| Object storage | **Cloudflare R2** | S3-compatible, via `@aws-sdk/client-s3` with `region: 'auto'`. Optional — payslip PDFs stream inline when R2 is not configured. |
+| Queue | Redis + BullMQ | Optional. Payslip computation runs inline when `REDIS_URL` is absent. |
+| Errors | Sentry | Optional. No-ops without a DSN. |
+
+### The contract-overlap constraint
+
+Payroll must be able to answer "which contract applied on this date" with
+exactly one row. Apply the exclusion constraint once against Neon:
+
+```bash
+psql "$DATABASE_URL" -f backend/prisma/sql/001_no_overlapping_running_contracts.sql
 ```
 
-## 🔐 Security & RBAC
+The service also checks for overlaps in application code and returns
+`409 OVERLAPPING_CONTRACT`; the constraint is the guarantee underneath it.
 
-The system implements role-based access control (RBAC) with 5 roles:
+---
 
-1. **EMPLOYEE**: Can view own attendance, time off, and payslips
-2. **HR_MANAGER**: Full access to HR modules (employees, contracts, attendance, time off)
-3. **HR_PAYROLL_USER**: HR Manager + read/create/update payruns and payslips
-4. **HR_PAYROLL_MANAGER**: Full payroll access including salary structures and rules
-5. **ADMIN**: Full system access
+## How payroll actually computes
 
-## 💾 Database Schema
+This is the part worth understanding, because it is what separates the app from
+a CRUD form over a payslip table.
 
-The database uses PostgreSQL with the following key entities:
+1. **A salary structure is an ordered list of rules.** Each rule has a `code`, a
+   `category` (BASIC / ALLOWANCE / DEDUCTION / GROSS / NET), a `sequence`, and a
+   computation type — a fixed amount, a percentage of an earlier rule, or a
+   formula.
+2. **The rule engine runs them in sequence**, writing every result into a shared
+   context keyed by rule code, so a later rule can reference an earlier one
+   (`GROSS - PF`). Formulas are evaluated by a hardened mathjs instance — never
+   `eval` — with runtime extension points disabled and a token blocklist.
+3. **Every result is persisted as a `PayslipLine`.** A payslip is a *snapshot*,
+   not a live view: editing a salary rule next month cannot retroactively change
+   what someone was already paid.
+4. **The payrun state machine is guarded end to end**:
+   `DRAFT → COMPUTING → COMPUTED → VALIDATED → PAID`. Validation is blocked
+   while any payslip carries a blocking warning (missing bank details, no active
+   contract), and a `PAID` payrun is immutable.
 
-- **Users**: Authentication and role management
-- **Employees**: Employee records with department and manager relationships
-- **Departments**: Organizational structure
-- **Contracts**: Employment contracts with period validity
-- **Working Schedules**: Weekly schedule definitions
-- **Attendance**: Check-in/check-out records
-- **Time Off Types**: Leave type definitions
-- **Time Off Allocations**: Leave balance allocations
-- **Time Off Requests**: Leave requests with approval workflow
-- **Salary Structures**: Salary rule groupings
-- **Salary Rules**: Computation rules (FIXED, PERCENTAGE, FORMULA)
-- **Payruns**: Payroll execution periods
-- **Payslips**: Generated payslips with computed line items
+Worked example from the seeded structure, on a ₹50,000 basic:
 
-## 🔧 Payroll Rule Engine
+| Seq | Rule | Computation | Amount |
+|---|---|---|---|
+| 1 | Basic Salary | fixed | 50,000.00 |
+| 2 | House Rent Allowance | 40% of BASIC | 20,000.00 |
+| 3 | Provident Fund | 12% of BASIC | −6,000.00 |
+| 4 | Gross Salary | `BASIC + HRA` | 70,000.00 |
+| 5 | Net Salary | `GROSS - PF` | **64,000.00** |
 
-The payroll system features a configurable rule engine that supports:
+---
 
-- **FIXED**: Fixed amount (e.g., Basic Salary: 50000)
-- **PERCENTAGE**: Percentage of another rule (e.g., HRA: 40% of BASIC)
-- **FORMULA**: Mathematical expressions (e.g., NET = GROSS - DEDUCTIONS)
+## Architecture notes
 
-Rules execute in sequence order, with later rules able to reference results from earlier rules.
+**Authorisation is enforced twice, and only one of them counts.** The API is the
+real boundary: a global `JwtAuthGuard` authenticates, a global `AbilitiesGuard`
+checks the CASL policy declared by `@CheckAbility`, and list queries for
+self-service roles are additionally scoped to the caller's own `employeeId` —
+because "may this role read employees" and "may this role read *this* employee"
+are different questions. The frontend mirrors the same policy in
+`src/lib/abilities` purely to hide actions a role cannot perform.
 
-## 📊 Dashboard Endpoints
+**Every response is `{ data, meta? }`.** A single interceptor normalises it, so
+the frontend's list and detail hooks were written once against one shape.
 
-The dashboard provides analytics endpoints:
+**Errors carry a `code`.** `OVERLAPPING_CONTRACT`, `INSUFFICIENT_BALANCE`,
+`BLOCKING_WARNINGS`, `PAYRUN_IMMUTABLE` and friends let the UI show a precise
+inline message instead of a generic toast.
 
-- `/api/v1/dashboard/kpis` - Key performance indicators
-- `/api/v1/dashboard/salary-cost-by-department` - Salary costs by department
-- `/api/v1/dashboard/monthly-net-salary-trend` - Monthly salary trends
-- `/api/v1/dashboard/payslip-status-breakdown` - Payslip status distribution
-- `/api/v1/dashboard/alerts` - Payroll warnings and alerts
-- `/api/v1/dashboard/attendance-overview` - Attendance statistics
-- `/api/v1/dashboard/time-off-overview` - Leave statistics
-- `/api/v1/dashboard/department-overview` - Department-level metrics
+**Balances are never client-supplied.** Approving leave updates the request and
+debits the allocation inside one transaction; `remaining` is derived server-side.
 
-## 🛠️ Tech Stack
+---
 
-- **Backend**: NestJS (Node.js + TypeScript)
-- **Database**: PostgreSQL 16
-- **ORM**: Prisma
-- **Cache/Queue**: Redis + BullMQ
-- **Authentication**: JWT (access + refresh tokens)
-- **Authorization**: CASL (RBAC)
-- **Validation**: class-validator + class-transformer
-- **API Documentation**: Swagger/OpenAPI
-- **Password Hashing**: argon2
+## Design system
 
-## 📝 Development Notes
+Dark-first, borders-only depth, one indigo accent. The signature is a **ledger
+rail**: tabular JetBrains Mono numerals in hairline-ruled columns, used
+identically in the KPI strip, every table, and the payslip breakdown — so a
+figure looks the same wherever it appears. Status colour means one thing across
+all modules (green is settled, whether that is an approved leave request, a
+running contract, or a paid payslip).
 
-- The backend uses PostgreSQL for production-grade data integrity
-- Redis is required for BullMQ job queues (payroll computation, PDF generation, email)
-- File storage and email services are mocked for local development
-- Sentry integration is available but requires configuration
-- The system is designed to be modular and can be split into microservices if needed
+Tokens live in `frontend/src/app/globals.css`. Light and dark are both defined
+as complete palettes; only lightness moves between them.
 
-## 📄 License
+---
 
-UNLICENSED
+## Checks
 
-## 🤝 Support
+```bash
+cd backend  && npm run build && npm run lint
+cd frontend && npm run typecheck && npm run lint && npm run build
+```
 
-For detailed architecture and implementation guidance, refer to the documentation in the `specs/` folder.
+Regenerate the typed API surface from a running backend:
+
+```bash
+cd frontend && npm run codegen
+```
