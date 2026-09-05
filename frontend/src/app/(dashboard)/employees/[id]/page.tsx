@@ -29,6 +29,7 @@ import {
 import { Skeleton } from '@/components/ui/data-table';
 import { StatusChip } from '@/components/ui/status';
 import { EmployeeTimeline } from '@/components/employees/employee-timeline';
+import { DepartmentLeadership } from '@/components/employees/department-leadership';
 import {
   useContracts,
   useDeleteEmployee,
@@ -389,6 +390,19 @@ function EmployeeForm() {
                 </div>
               </Card>
             </fieldset>
+
+            {/* Outside the fieldset: appointing a head is its own action, not
+                part of the employee form, and must stay enabled while the form
+                is read-only. */}
+            {!isNew ? (
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                <DepartmentLeadership
+                  employeeId={id}
+                  employeeName={form.name}
+                  departmentId={form.departmentId || null}
+                />
+              </div>
+            ) : null}
 
             {banner ? (
               <div

@@ -86,9 +86,23 @@ export interface ApiErrorBody {
   timestamp?: string;
 }
 
+export interface DepartmentHead {
+  id: string;
+  name: string;
+  workEmail: string;
+  avatarUrl?: string | null;
+}
+
 export interface Department {
   id: string;
   name: string;
+  /**
+   * The employee who leads this department. They may approve and refuse leave
+   * for its members - authority that comes from this relationship, not from
+   * their role.
+   */
+  headId?: string | null;
+  head?: DepartmentHead | null;
   _count?: { employees: number };
 }
 
@@ -313,6 +327,12 @@ export interface AppUser {
   isActive: boolean;
   employeeId: string | null;
   employee: Employee | null;
+  /**
+   * Departments this user leads. A head may approve and refuse leave for their
+   * members — authority that comes from the relationship, not the role, so it
+   * cannot be derived from `role` alone.
+   */
+  headedDepartments?: { id: string; name: string }[];
   createdAt?: string;
 }
 

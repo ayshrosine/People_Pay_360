@@ -110,10 +110,22 @@ async function login(email) {
   check('head is refused their own request', own, 403);
 
   console.log('\n== A PLAIN EMPLOYEE HAS NONE OF THIS ==');
-  const plain = employees.find(
+  // Not every employee has a login, so try each until one signs in.
+  const candidates = employees.filter(
     (e) => e.departmentId === engineering.id && e.id !== engineering.head.id && e.workEmail,
   );
-  const plainLogin = await req('POST', '/auth/login', null, { email: plain.workEmail, password: 'password123' });
+  let plainLogin = { status: 0 };
+  for (const candidate of candidates) {
+    const attempt = await req('POST', '/auth/login', null, {
+      email: candidate.workEmail,
+      password: 'password123',
+    });
+    if (attempt.status === 200 || attempt.status === 201) {
+      plainLogin = attempt;
+      console.log('  signed in as a non-head colleague: ' + candidate.name);
+      break;
+    }
+  }
   if (plainLogin.status === 200 || plainLogin.status === 201) {
     const P = plainLogin.json.data.accessToken;
     check('a non-head employee cannot approve', await req('PATCH', '/time-off/requests/' + ownId + '/approve', P), 403);

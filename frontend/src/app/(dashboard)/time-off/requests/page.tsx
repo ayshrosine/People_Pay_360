@@ -25,7 +25,7 @@ import type { TimeOffRequest } from '@/lib/api/types';
 function RequestsView() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { can, selfService, user } = useAuth();
+  const { can, selfService, user, canDecideLeaveFor } = useAuth();
 
   // The URL is the source of truth for this filter, so a filtered view is
   // shareable and the browser Back button behaves as the user expects.
@@ -47,7 +47,10 @@ function RequestsView() {
   });
   const decide = useDecideTimeOffRequest();
 
-  const canApprove = can('update', 'TimeOffRequest') && !selfService;
+  // A department head is an ordinary EMPLOYEE whose authority comes from
+  // leading a department, so this is decided per row rather than per role.
+  const canDecide = (row: { employeeId: string; employee?: { departmentId?: string | null } | null }) =>
+    canDecideLeaveFor(row.employeeId, row.employee?.departmentId);
   const filteredEmployee = employees.data?.data.find((employee) => employee.id === employeeId);
 
   return (
@@ -165,7 +168,7 @@ function RequestsView() {
               header: '',
               width: '86px',
               cell: (row) =>
-                canApprove && row.status === 'TO_APPROVE' ? (
+                canDecide(row) && row.status === 'TO_APPROVE' ? (
                   <div className="flex justify-end gap-1">
                     <Tooltip content="Approve">
                       <Button

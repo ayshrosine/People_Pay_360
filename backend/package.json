@@ -29,7 +29,10 @@
     "payruns:demo": "node scripts/create-payruns.js",
     "test:api": "node test/api-e2e.js",
     "test:ui": "node test/ui-e2e.js",
-    "seed:heads": "node prisma/seed-heads.js"
+    "seed:heads": "node prisma/seed-heads.js",
+    "test:heads": "node test/department-head-e2e.js",
+    "test:head-ui": "node test/head-ui-e2e.js",
+    "test:all": "npm run test:api && npm run test:heads && npm run test:ui && npm run test:head-ui"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1127.0",

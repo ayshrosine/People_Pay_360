@@ -216,6 +216,25 @@ export function useCreateDepartment() {
   });
 }
 
+/**
+ * Appoints or clears a department's head. `headId: null` removes the current
+ * head, which is why the payload is nullable rather than optional.
+ *
+ * Invalidates the current user too: leading a department changes what that
+ * person is allowed to do, and `/auth/me` is what tells the UI about it.
+ */
+export function useSetDepartmentHead() {
+  return useApiMutation(
+    ({ departmentId, headId }: { departmentId: string; headId: string | null }) =>
+      patchData<Department>(`/departments/${departmentId}`, { headId }),
+    {
+      invalidate: [['departments'], ['me'], ['employees']],
+      successMessage: (department) =>
+        department?.head ? `${department.head.name} now heads ${department.name}.` : 'Department head removed.',
+    },
+  );
+}
+
 /* ---------------------------------------------------------------- contracts */
 
 export function useContracts(params: { employeeId?: string } = {}) {

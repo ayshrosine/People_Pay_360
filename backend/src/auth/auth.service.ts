@@ -121,7 +121,17 @@ export class AuthService {
       throw new NotFoundException({ message: 'User not found', code: 'NOT_FOUND' });
     }
 
-    return user;
+    // Leading a department is authority the role cannot express, so the client
+    // needs it explicitly to know whether to offer approve/refuse at all. It is
+    // a hint for the UI only - the API re-checks it per record.
+    const headedDepartments = user.employeeId
+      ? await this.prisma.department.findMany({
+          where: { headId: user.employeeId },
+          select: { id: true, name: true },
+        })
+      : [];
+
+    return { ...user, headedDepartments };
   }
 
   async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {

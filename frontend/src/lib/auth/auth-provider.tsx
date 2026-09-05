@@ -19,6 +19,15 @@ interface AuthContextValue {
   logout: () => void;
   can: (action: Action, subject: Subject) => boolean;
   selfService: boolean;
+  /** Departments this user leads; empty for almost everyone. */
+  headedDepartments: { id: string; name: string }[];
+  isDepartmentHead: boolean;
+  /**
+   * Whether this user may decide a leave request. HR roles may decide any; a
+   * department head may decide their own department's, but never their own.
+   * The API enforces the same rule — this only decides what to render.
+   */
+  canDecideLeaveFor: (employeeId: string | null | undefined, departmentId: string | null | undefined) => boolean;
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null);
@@ -112,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [clear, queryClient, router]);
 
   const role = user?.role ?? null;
+  const headedDepartments = React.useMemo(() => user?.headedDepartments ?? [], [user]);
 
   const value = React.useMemo<AuthContextValue>(
     () => ({
@@ -123,8 +133,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       can: (action, subject) => can(role, action, subject),
       selfService: isSelfService(role),
+      headedDepartments,
+      isDepartmentHead: headedDepartments.length > 0,
+      canDecideLeaveFor: (employeeId, departmentId) => {
+        // HR decides anything they can update.
+        if (can(role, 'update', 'TimeOffRequest') && !isSelfService(role)) return true;
+        // A head never decides their own leave — that goes up the chain.
+        if (employeeId && employeeId === user?.employeeId) return false;
+        return Boolean(departmentId && headedDepartments.some((d) => d.id === departmentId));
+      },
     }),
-    [user, role, loading, authenticated, login, logout],
+    [user, role, loading, authenticated, login, logout, headedDepartments],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
