@@ -1,0 +1,306 @@
+@import "tailwindcss";
+/* Enter/exit keyframes for Radix overlays (the Tailwind v4 successor to
+   tailwindcss-animate). */
+@import "tw-animate-css";
+
+/* ============================================================================
+   PeoplePay360 design tokens
+
+   The product is a precision instrument for people who reconcile money: dense,
+   quiet, and built so that numbers lead. Structure comes from hairline borders
+   and whitespace rather than shadows, which is also what survives dark mode.
+
+   One accent (indigo) carries actions and identity. Every other colour is
+   semantic - a green here means "settled" in payroll exactly as it means
+   "approved" in time off, in every module.
+   ========================================================================= */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces: one hue, lightness steps only, so nothing fragments the page. */
+  --surface-canvas: #fbfbfc;
+  --surface-base: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f4f5f7;
+  --surface-hover: #f4f5f7;
+  --surface-active: #eceef2;
+
+  /* Inputs sit slightly inset - they receive content. */
+  --control-bg: #f7f8fa;
+  --control-bg-hover: #f2f3f6;
+  --control-border: rgba(16, 20, 32, 0.14);
+
+  /* Borders whisper. If you notice them first, they are too strong. */
+  --border-subtle: rgba(16, 20, 32, 0.08);
+  --border-default: rgba(16, 20, 32, 0.12);
+  --border-strong: rgba(16, 20, 32, 0.2);
+
+  /* Four text levels. Two is not a hierarchy. */
+  --text-primary: #101420;
+  --text-secondary: #4a5163;
+  --text-tertiary: #6c7387;
+  --text-muted: #98a0b3;
+
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-fg: #ffffff;
+  --accent-subtle: rgba(79, 70, 229, 0.09);
+  --accent-ring: rgba(79, 70, 229, 0.4);
+
+  --status-success: #15803d;
+  --status-success-bg: rgba(21, 128, 61, 0.1);
+  --status-warning: #b45309;
+  --status-warning-bg: rgba(180, 83, 9, 0.1);
+  --status-danger: #be123c;
+  --status-danger-bg: rgba(190, 18, 60, 0.09);
+  --status-info: #0369a1;
+  --status-info-bg: rgba(3, 105, 161, 0.1);
+  --status-neutral: #52586b;
+  --status-neutral-bg: rgba(82, 88, 107, 0.09);
+
+  --radius-control: 6px;
+  --radius-card: 10px;
+  --radius-overlay: 14px;
+
+  --shadow-overlay:
+    0 0 0 1px rgba(16, 20, 32, 0.06), 0 8px 24px -8px rgba(16, 20, 32, 0.16),
+    0 2px 6px -2px rgba(16, 20, 32, 0.08);
+
+  /* Entering motion. ease-in delays the frame the user is watching. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Dark is the primary mode for this product - it matches the operator's
+   environment in the source mockups. Only lightness moves; the hue holds. */
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+
+    --surface-canvas: #0b0d12;
+    --surface-base: #101319;
+    --surface-raised: #161a22;
+    --surface-sunken: #0d1015;
+    --surface-hover: #191d26;
+    --surface-active: #1e232d;
+
+    --control-bg: #0d1015;
+    --control-bg-hover: #121620;
+    --control-border: rgba(255, 255, 255, 0.12);
+
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-default: rgba(255, 255, 255, 0.1);
+    --border-strong: rgba(255, 255, 255, 0.18);
+
+    --text-primary: #e7eaf0;
+    --text-secondary: #a3aab9;
+    --text-tertiary: #7d8496;
+    --text-muted: #5c6373;
+
+    --accent: #6366f1;
+    --accent-hover: #7c7ff3;
+    --accent-fg: #ffffff;
+    --accent-subtle: rgba(99, 102, 241, 0.14);
+    --accent-ring: rgba(99, 102, 241, 0.5);
+
+    --status-success: #4ade80;
+    --status-success-bg: rgba(74, 222, 128, 0.12);
+    --status-warning: #fbbf24;
+    --status-warning-bg: rgba(251, 191, 36, 0.12);
+    --status-danger: #fb7185;
+    --status-danger-bg: rgba(251, 113, 133, 0.12);
+    --status-info: #38bdf8;
+    --status-info-bg: rgba(56, 189, 248, 0.12);
+    --status-neutral: #94a0b8;
+    --status-neutral-bg: rgba(148, 160, 184, 0.1);
+
+    /* Depth shadows do not read on dark; a ring does the work. */
+    --shadow-overlay:
+      0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 40px -12px rgba(0, 0, 0, 0.7);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface-canvas: #0b0d12;
+  --surface-base: #101319;
+  --surface-raised: #161a22;
+  --surface-sunken: #0d1015;
+  --surface-hover: #191d26;
+  --surface-active: #1e232d;
+
+  --control-bg: #0d1015;
+  --control-bg-hover: #121620;
+  --control-border: rgba(255, 255, 255, 0.12);
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  --text-primary: #e7eaf0;
+  --text-secondary: #a3aab9;
+  --text-tertiary: #7d8496;
+  --text-muted: #5c6373;
+
+  --accent: #6366f1;
+  --accent-hover: #7c7ff3;
+  --accent-fg: #ffffff;
+  --accent-subtle: rgba(99, 102, 241, 0.14);
+  --accent-ring: rgba(99, 102, 241, 0.5);
+
+  --status-success: #4ade80;
+  --status-success-bg: rgba(74, 222, 128, 0.12);
+  --status-warning: #fbbf24;
+  --status-warning-bg: rgba(251, 191, 36, 0.12);
+  --status-danger: #fb7185;
+  --status-danger-bg: rgba(251, 113, 133, 0.12);
+  --status-info: #38bdf8;
+  --status-info-bg: rgba(56, 189, 248, 0.12);
+  --status-neutral: #94a0b8;
+  --status-neutral-bg: rgba(148, 160, 184, 0.1);
+
+  --shadow-overlay:
+    0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 40px -12px rgba(0, 0, 0, 0.7);
+}
+
+@theme inline {
+  --color-canvas: var(--surface-canvas);
+  --color-base: var(--surface-base);
+  --color-raised: var(--surface-raised);
+  --color-sunken: var(--surface-sunken);
+  --color-hover: var(--surface-hover);
+  --color-active: var(--surface-active);
+
+  --color-control: var(--control-bg);
+  --color-control-hover: var(--control-bg-hover);
+  --color-control-border: var(--control-border);
+
+  --color-subtle: var(--border-subtle);
+  --color-line: var(--border-default);
+  --color-line-strong: var(--border-strong);
+
+  --color-fg: var(--text-primary);
+  --color-fg-secondary: var(--text-secondary);
+  --color-fg-tertiary: var(--text-tertiary);
+  --color-fg-muted: var(--text-muted);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-subtle: var(--accent-subtle);
+
+  --color-success: var(--status-success);
+  --color-success-bg: var(--status-success-bg);
+  --color-warning: var(--status-warning);
+  --color-warning-bg: var(--status-warning-bg);
+  --color-danger: var(--status-danger);
+  --color-danger-bg: var(--status-danger-bg);
+  --color-info: var(--status-info);
+  --color-info-bg: var(--status-info-bg);
+  --color-neutral: var(--status-neutral);
+  --color-neutral-bg: var(--status-neutral-bg);
+
+  --radius-ctl: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-overlay: var(--radius-overlay);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono-jb), ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+* {
+  border-color: var(--border-default);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--surface-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+  letter-spacing: -0.02em;
+}
+
+/* Every figure that can change must not shift the layout when it does. */
+.tabular,
+table td,
+table th {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- The ledger rail -------------------------------------------------------
+   This product's signature: a numeric column that reads like a ruled ledger,
+   used identically in KPI strips, tables and the payslip breakdown, so a
+   figure looks the same wherever it appears. */
+.ledger-num {
+  font-family: var(--font-mono-jb), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Dashed section rules with corner ticks - the quiet structural motif. */
+.rule-dashed {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--border-default) 0,
+    var(--border-default) 4px,
+    transparent 4px,
+    transparent 9px
+  );
+  height: 1px;
+}
+
+::selection {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Scrollbars should recede into the surface, not sit on top of it. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+  background-clip: content-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
