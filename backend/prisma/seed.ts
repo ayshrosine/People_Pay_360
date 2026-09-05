@@ -89,7 +89,7 @@ async function main() {
     create: {
       id: 'standard-schedule',
       name: 'Standard 40-hour Week',
-      company: 'PeoplePay360',
+      company: 'Odoo PNX',
       timezone: 'Asia/Kolkata',
       scheduleType: 'Fixed',
       totalWeeklyHours: 40,
