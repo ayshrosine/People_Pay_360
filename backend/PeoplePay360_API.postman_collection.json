@@ -60,9 +60,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const data = pm.response.json();",
-                  "if (data.accessToken) { pm.collectionVariables.set('accessToken', data.accessToken); }",
-                  "if (data.refreshToken) { pm.collectionVariables.set('refreshToken', data.refreshToken); }",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) { pm.collectionVariables.set('accessToken', jsonData.accessToken); }",
+                  "if (jsonData.refreshToken) { pm.collectionVariables.set('refreshToken', jsonData.refreshToken); }",
                   "pm.test('Login succeeded', () => pm.response.code === 200 || pm.response.code === 201);"
                 ]
               }
