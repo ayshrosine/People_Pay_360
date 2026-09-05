@@ -1,4 +1,4 @@
-# PeoplePay360
+# Odoo PNX
 
 HR and payroll operations in one place: employees, contracts, working schedules,
 attendance, time off, and a payroll engine where **salary rules actually drive
@@ -11,9 +11,18 @@ people_pay/
 └── specs/      Product spec, mockups, project status, and the rules that matter
 ```
 
-**Start here:** [`specs/IMPORTANT.md`](specs/IMPORTANT.md) — the invariants that
-keep payroll trustworthy. [`specs/PROJECT_STATUS.md`](specs/PROJECT_STATUS.md) —
-what works today, verified against the live database.
+## Documentation
+
+| Read this | For |
+|---|---|
+| [`specs/modules/`](specs/modules/00-OVERVIEW.md) | **Every file explained**, written for someone new to the codebase |
+| [`specs/IMPORTANT.md`](specs/IMPORTANT.md) | The invariants that keep payroll trustworthy |
+| [`specs/PROJECT_STATUS.md`](specs/PROJECT_STATUS.md) | What works today, verified against the live database |
+| [`specs/DEPLOYMENT.md`](specs/DEPLOYMENT.md) | Deploying to Zerops |
+
+New here? Start with
+[`specs/modules/00-OVERVIEW.md`](specs/modules/00-OVERVIEW.md) — it explains the
+whole system, then walks through every module in order.
 
 ---
 
@@ -85,9 +94,9 @@ approve leave for Engineering because `Department.headId` points at him.
 |---|---|---|
 | Dashboard | `/dashboard` | Live payroll KPIs, salary cost by department, net-salary trend, alerts |
 | Employees | `/employees` | Directory (kanban or list), full employee record |
-| Contracts | `/contracts` | Employment terms, wage, salary structure, period |
+| Contracts | `/contracts` | Employment terms: wage, salary structure, **working schedule**, period |
 | Time & Attendance | `/time-off` | Attendance, leave requests, allocations, leave types |
-| Working schedules | `/working-schedules` | Rostered days and hours, which drive pro-rating |
+| Working schedules | `/working-schedules` | Rostered days and hours, attached to contracts, which drive pro-rating |
 | Payroll | `/payroll` | Payruns, payslips, salary structures and rules |
 | Users | `/admin/users` | Accounts and roles |
 
@@ -98,6 +107,11 @@ under *Department leadership*.
 **Attendance sits inside Time & Attendance** rather than in a module of its own:
 leave and attendance are two answers to the same question — who was at work —
 and payroll reads both to decide what a period is worth.
+
+**A working schedule belongs to a contract, not to a person.** A schedule is a
+term of employment: someone who moves to part time in July must still be judged
+against the full-time roster for June, and a field on the employee could only
+ever describe today.
 
 ---
 
@@ -209,6 +223,20 @@ approved leave request, a running contract, or a paid payslip).
 
 Tokens live in `frontend/src/app/globals.css`. Light and dark are both defined
 as complete palettes; only lightness moves between them.
+
+---
+
+## Deployment
+
+[`zerops.yml`](zerops.yml) deploys both halves to Zerops — the API and the web
+app as two services, with Neon and R2 unchanged. Step by step in
+[`specs/DEPLOYMENT.md`](specs/DEPLOYMENT.md).
+
+```bash
+zcli push
+```
+
+Secrets are never in that file. Set them in the Zerops GUI.
 
 ---
 

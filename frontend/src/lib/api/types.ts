@@ -123,7 +123,9 @@ export interface WorkingSchedule {
   totalWeeklyHours: number;
   status: string;
   lines: WorkingScheduleLine[];
-  _count?: { employees: number; contracts: number };
+  // Employees reach a schedule through their contract, so contracts are
+  // the only direct count.
+  _count?: { contracts: number };
 }
 
 export interface Employee {

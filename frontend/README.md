@@ -1,4 +1,4 @@
-# PeoplePay360 — Web app
+# Odoo PNX — Web app
 
 Next.js 16 (App Router) + React 19 + Tailwind v4. Every screen is a client of
 the NestJS API in [`../backend`](../backend); there is no server-side data

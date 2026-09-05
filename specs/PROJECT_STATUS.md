@@ -1,4 +1,4 @@
-# PeoplePay360 — Project status
+# Odoo PNX — Project status
 
 _Last verified: 5 September 2026, against the live Neon database and the
 `peoplepay360-files` R2 bucket._
@@ -75,6 +75,24 @@ Each degrades cleanly rather than crashing at boot.
 3. **Email delivery is untested** because no valid Resend key was available.
 
 ## Recent work
+
+**Renamed to Odoo PNX**, with `specs/icon.svg` as the logo and favicon. The name
+lives in one constant (`APP_NAME`); accounts moved to `@odoopnx.com` by updating
+existing rows, not reseeding.
+
+**The working schedule moved from the employee to the contract.** A schedule is
+a term of employment, so payroll can now answer "which roster applied during
+this period?" instead of only "which applies today". Contracts were backfilled
+before the column was dropped.
+
+**Zerops deployment added** — `zerops.yml` plus `specs/DEPLOYMENT.md`.
+
+**Module documentation added** — `specs/modules/`, thirteen files covering every
+file in the codebase for a newcomer.
+
+**UI motion pass** — hover lift and accent glow on buttons, an accent rail on
+table rows, animated borders on inputs, a page-enter transition, and an
+interactive card variant. All of it honours `prefers-reduced-motion`.
 
 **Interface rebuilt around a left rail.** A fixed sidebar names the module, and
 a top bar carries the breadcrumb, ⌘K command palette, theme toggle and account.

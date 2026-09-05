@@ -65,10 +65,12 @@ export default function WorkingSchedulesPage() {
               cell: (row) => `${Number(row.totalWeeklyHours ?? 0).toFixed(1)}h`,
             },
             {
-              key: 'employees',
-              header: 'Employees',
+              // A schedule is attached to contracts, not to people directly, so
+              // this counts the contracts that roster against it.
+              key: 'contracts',
+              header: 'Contracts',
               numeric: true,
-              cell: (row) => row._count?.employees ?? 0,
+              cell: (row) => row._count?.contracts ?? 0,
             },
             { key: 'status', header: 'Status', cell: (row) => <StatusChip status={row.status} /> },
           ]}

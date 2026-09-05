@@ -221,15 +221,21 @@ export default function DashboardPage() {
           <HealthGauge
             score={health}
             loading={attendance.isLoading || timeOff.isLoading}
+            // An em dash while the data is in flight. Showing a formatted zero
+            // reads as a real measurement - "0.0% attendance coverage" is
+            // alarming, and wrong.
             breakdown={[
               {
                 label: 'Attendance coverage',
-                value: `${formatNumber(attendance.data?.coveragePct, 1)}%`,
+                value: attendance.data ? `${formatNumber(attendance.data.coveragePct, 1)}%` : '—',
               },
-              { label: 'Blocking warnings', value: formatNumber(blockingCount) },
+              {
+                label: 'Blocking warnings',
+                value: alerts.data ? formatNumber(blockingCount) : '—',
+              },
               {
                 label: 'Pending approvals',
-                value: formatNumber(timeOff.data?.pendingRequests),
+                value: timeOff.data ? formatNumber(timeOff.data.pendingRequests) : '—',
               },
             ]}
           />

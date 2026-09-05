@@ -66,6 +66,14 @@ salary — this was a real bug.
 **`BASIC` derives from the contract wage.** A fixed amount pays every employee
 the same regardless of their contract. This was also a real bug.
 
+**The working schedule belongs to the contract, never the employee.** A schedule
+is a term of employment. On the person it can only describe "now", so every
+change silently rewrote history and last month's payslip would recompute
+differently from how it was actually paid. Anything needing a roster resolves it
+through the contract that covered the date — see `scheduleOn()` in
+`attendance.service.ts` and `countWorkingDays()` in
+`payslip-computation.service.ts`.
+
 **Balances are never client-supplied.** Approving leave updates the request and
 debits the allocation inside one transaction; `remaining` is derived
 server-side.
@@ -161,6 +169,21 @@ ahead of UTC.
 Attendance is **inside** Time & Attendance (`/time-off/attendance`), not a
 module of its own. `/attendance` redirects there. Leave and attendance answer
 the same question and payroll reads both.
+
+The working schedule is on the **contract form**, not the employee form.
+
+The product is **Odoo PNX**. The name lives in one constant — `APP_NAME` in
+`frontend/src/components/layout/brand.tsx` — and the logo is `/icon.svg`, the
+same file that serves as the favicon. Do not hard-code either.
+
+---
+
+## 7a. Documentation
+
+`specs/modules/` explains every file in the codebase for someone new. When you
+add a module or change how one works, update the matching file there. It is
+written to be read start to finish, so keep the tone plain and say *why*, not
+only *what*.
 
 ---
 

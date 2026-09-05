@@ -1,4 +1,4 @@
-# PeoplePay360 Backend
+# Odoo PNX Backend
 
 A comprehensive HR & Payroll Management System backend built with NestJS, TypeScript, PostgreSQL, and Prisma.
 
