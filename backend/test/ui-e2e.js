@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const APP = process.env.APP_URL || 'http://localhost:3001';
-const SHOTS = process.env.SHOT_DIR || path.join(__dirname, '..', '..', '_ui-shots');
+const SHOTS = process.env.SHOT_DIR || path.join(__dirname, '..', '.ui-shots');
 
 const ROLES = [
   {

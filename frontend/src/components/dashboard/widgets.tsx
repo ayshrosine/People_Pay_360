@@ -40,7 +40,9 @@ export function KpiRail({
           const item = raw as (typeof items)[number] | undefined;
           return (
             <div
-              key={item?.label ?? index}
+              // Keyed by position: this is a fixed-order strip, and the label
+              // is not unique (two departments can share a name).
+              key={index}
               className={cn(
                 'px-4 py-3.5',
                 // Hairline column rules turn the row into a ledger, not five boxes.
@@ -421,7 +423,8 @@ export function StatGrid({
       {(loading ? Array.from({ length: columns * 2 }) : items).map((raw, index) => {
         const item = raw as (typeof items)[number] | undefined;
         return (
-          <div key={item?.label ?? index} className="bg-[var(--surface-base)] px-3 py-2.5">
+          // Positional key: labels are data-derived and not guaranteed unique.
+          <div key={index} className="bg-[var(--surface-base)] px-3 py-2.5">
             {item?.label ? (
               <p className="font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 {item.label}

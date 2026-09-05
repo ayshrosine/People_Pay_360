@@ -1,7 +1,8 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { TopNav } from '@/components/layout/top-nav';
+import { Sidebar, MobileNav } from '@/components/layout/sidebar';
+import { Topbar } from '@/components/layout/topbar';
 import { AttendanceWidget } from '@/components/attendance/attendance-widget';
 import { useAuth } from '@/lib/auth/auth-provider';
 
@@ -23,8 +24,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-dvh bg-[var(--surface-canvas)]">
-      <TopNav />
-      <main>{children}</main>
+      <Sidebar />
+      {/* The rail is fixed, so the content column is inset by its width. */}
+      <div className="lg:pl-[248px]">
+        <Topbar />
+        <main className="pb-20 lg:pb-0">{children}</main>
+      </div>
+      <MobileNav />
       <AttendanceWidget />
     </div>
   );

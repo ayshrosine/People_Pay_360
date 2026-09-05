@@ -23,7 +23,8 @@ export default function PayrunsPage() {
   return (
     <PageShell
       wide
-      title="Payruns"
+      eyebrow="PAYROLL CYCLE"
+      title={<>Payruns</>}
       description="Draft → Computed → Validated → Paid. A paid payrun is immutable."
       actions={
         can('create', 'Payrun') ? (

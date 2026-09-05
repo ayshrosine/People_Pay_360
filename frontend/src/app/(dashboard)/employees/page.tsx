@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LayoutGrid, List, Plus, Search } from 'lucide-react';
-import { PageShell, Toolbar } from '@/components/layout/page-shell';
+import { Accent, PageShell, Toolbar } from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import { Avatar, Card, Input, Select } from '@/components/ui/primitives';
 import { DataTable, EmptyState, Skeleton } from '@/components/ui/data-table';
@@ -65,7 +65,8 @@ export default function EmployeesPage() {
   return (
     <PageShell
       wide
-      title="Employees"
+      eyebrow="PEOPLE DIRECTORY"
+      title={<>The <Accent>team</Accent></>}
       description="The hub every other module links back to."
       actions={
         can('create', 'Employee') ? (

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-// The module has no landing content of its own; requests are what people open it for.
+// Attendance is what people open this module for day to day; leave is periodic.
 export default function TimeOffIndexPage() {
-  redirect('/time-off/requests');
+  redirect('/time-off/attendance');
 }

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { AlertTriangle, Info, RotateCcw } from 'lucide-react';
-import { PageShell, Toolbar } from '@/components/layout/page-shell';
+import { Accent, PageShell, Toolbar } from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, Select } from '@/components/ui/primitives';
 import { DataTable, EmptyState, Skeleton } from '@/components/ui/data-table';
@@ -27,6 +27,7 @@ import {
   useTimeOffOverview,
 } from '@/hooks/use-resources';
 import { useFiltersStore } from '@/stores/filters-store';
+import { useAuth } from '@/lib/auth/auth-provider';
 import { formatMoney, formatNumber } from '@/lib/utils';
 import type { DepartmentOverviewRow } from '@/lib/api/types';
 
@@ -91,12 +92,33 @@ export default function DashboardPage() {
     return Math.max(0, Math.min(100, coverage * 0.7 + 30 - warningPenalty * 0.5 - backlogPenalty * 0.4));
   }, [attendance.data, timeOff.data, blockingCount]);
 
+  const { user } = useAuth();
+  const firstName = (user?.employee?.name ?? user?.email ?? 'there').split(/[\s@.]/)[0];
+
+  // Rendered on the client only (the shell is a client component), so the
+  // viewer's own locale and timezone decide what "today" reads as.
+  const today = React.useMemo(
+    () =>
+      new Date().toLocaleDateString(undefined, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+    [],
+  );
+
   const filtersDirty = period !== 'this_year' || departmentId !== null || employeeType !== null;
 
   return (
     <PageShell
       wide
-      title="Payroll dashboard"
+      eyebrow={today}
+      title={
+        <>
+          Welcome back, <Accent>{firstName}.</Accent>
+        </>
+      }
       description="Live figures from the HR and payroll flows — no placeholder data."
       toolbar={
         <Toolbar>

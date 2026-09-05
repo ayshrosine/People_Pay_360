@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Plus } from 'lucide-react';
-import { PageShell } from '@/components/layout/page-shell';
+import { Accent, PageShell } from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, Field, Input, Select, Switch } from '@/components/ui/primitives';
 import { DataTable } from '@/components/ui/data-table';
@@ -23,7 +23,8 @@ export default function TimeOffTypesPage() {
 
   return (
     <PageShell
-      title="Time off types"
+      eyebrow="TIME & ATTENDANCE"
+      title={<>Leave <Accent>types</Accent></>}
       description="Each type decides whether leave needs an allocation, an approval, and whether it reduces pay."
       actions={
         can('create', 'TimeOffType') ? (

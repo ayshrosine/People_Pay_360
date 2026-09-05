@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
-import { PageShell } from '@/components/layout/page-shell';
+import { Accent, PageShell } from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, Field, Input, Textarea } from '@/components/ui/primitives';
 import { DataTable } from '@/components/ui/data-table';
@@ -21,7 +21,8 @@ export default function SalaryStructuresPage() {
 
   return (
     <PageShell
-      title="Salary structures"
+      eyebrow="PAYROLL RULES"
+      title={<>Salary <Accent>structures</Accent></>}
       description="A structure is an ordered set of rules; those rules are what compute every payslip."
       actions={
         can('create', 'SalaryStructure') ? (

@@ -156,11 +156,12 @@ export interface EmployeeQuery {
   limit?: number;
 }
 
-export function useEmployees(params: EmployeeQuery = {}) {
+export function useEmployees(params: EmployeeQuery = {}, enabled = true) {
   return useQuery({
     queryKey: keys.employees(params),
     queryFn: () => getList<Employee>('/employees', { params: clean(params) }),
     placeholderData: (previous) => previous,
+    enabled,
   });
 }
 

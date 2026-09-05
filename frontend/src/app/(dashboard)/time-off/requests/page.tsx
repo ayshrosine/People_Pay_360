@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Check, Plus, X } from 'lucide-react';
-import { PageShell, Toolbar } from '@/components/layout/page-shell';
+import { Accent, PageShell, Toolbar } from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import { Avatar, Card, Field, Input, Select, Textarea } from '@/components/ui/primitives';
 import { DataTable } from '@/components/ui/data-table';
@@ -53,7 +53,8 @@ function RequestsView() {
   return (
     <PageShell
       wide
-      title="Time off requests"
+      eyebrow="TIME & ATTENDANCE"
+      title={<>Leave <Accent>requests</Accent></>}
       description="Approving a request debits the employee's allocation in the same transaction."
       actions={
         can('create', 'TimeOffRequest') ? (

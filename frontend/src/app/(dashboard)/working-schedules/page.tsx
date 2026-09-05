@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
-import { PageShell } from '@/components/layout/page-shell';
+import { Accent, PageShell } from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/primitives';
 import { DataTable } from '@/components/ui/data-table';
@@ -19,7 +19,8 @@ export default function WorkingSchedulesPage() {
 
   return (
     <PageShell
-      title="Working schedules"
+      eyebrow="ROSTERED HOURS"
+      title={<>Working <Accent>schedules</Accent></>}
       description="Weekly hours are derived from the day lines, never entered by hand."
       actions={
         can('create', 'WorkingSchedule') ? (

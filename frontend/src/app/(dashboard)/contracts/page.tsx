@@ -38,7 +38,8 @@ function ContractsView() {
   return (
     <PageShell
       wide
-      title="Contracts"
+      eyebrow="EMPLOYMENT TERMS"
+      title={<>Contracts</>}
       description="Payroll always uses the contract applicable to the period being run."
       actions={
         can('create', 'Contract') ? (

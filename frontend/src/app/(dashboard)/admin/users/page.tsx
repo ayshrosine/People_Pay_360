@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Info, Plus } from 'lucide-react';
-import { PageShell, Toolbar } from '@/components/layout/page-shell';
+import { Accent, PageShell, Toolbar } from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import { Avatar, Card, Field, Input, Select, Switch } from '@/components/ui/primitives';
 import { DataTable } from '@/components/ui/data-table';
@@ -44,7 +44,8 @@ export default function UsersPage() {
 
   return (
     <PageShell
-      title="User management"
+      eyebrow="ADMINISTRATION"
+      title={<>User <Accent>management</Accent></>}
       description="Accounts and roles. Users can never assign or elevate their own role."
       actions={
         <Button variant="primary" onClick={() => setCreating(true)}>

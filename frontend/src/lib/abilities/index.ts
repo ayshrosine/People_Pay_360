@@ -114,7 +114,7 @@ export function isSelfService(role: RoleName | null | undefined): boolean {
  */
 export function homeRouteFor(role: RoleName | null | undefined): string {
   if (!role) return '/login';
-  return can(role, 'read', 'Dashboard') ? '/dashboard' : '/attendance';
+  return can(role, 'read', 'Dashboard') ? '/dashboard' : '/time-off/attendance';
 }
 
 export const ROLE_LABELS: Record<RoleName, string> = {

@@ -33,7 +33,8 @@ export default function AllocationsPage() {
   return (
     <PageShell
       wide
-      title="Allocations"
+      eyebrow="TIME & ATTENDANCE"
+      title={<>Allocations</>}
       description="Approved leave draws down from these balances; remaining is never client-supplied."
       actions={
         can('create', 'TimeOffAllocation') && !selfService ? (

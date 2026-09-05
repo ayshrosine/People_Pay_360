@@ -62,10 +62,16 @@ function weeklyHours(schedule) {
 async function main() {
   console.log('Seeding representative demo data...\n');
 
+  // Match on name, not id: the base seed already owns some of these names under
+  // different ids, and creating a second row would leave the dashboard showing
+  // two "Engineering" departments.
+  const departmentIds = new Map();
   for (const d of DEPARTMENTS) {
-    await prisma.department.upsert({ where: { id: d.id }, update: { name: d.name }, create: d });
+    const existing = await prisma.department.findFirst({ where: { name: d.name } });
+    const row = existing ?? (await prisma.department.create({ data: d }));
+    departmentIds.set(d.id, row.id);
   }
-  console.log('departments        ' + DEPARTMENTS.length);
+  console.log('departments        ' + DEPARTMENTS.length + ' (reused where they already existed)');
 
   for (const s of SCHEDULES) {
     const total = weeklyHours(s);
@@ -93,10 +99,10 @@ async function main() {
   for (const e of EMPLOYEES) {
     await prisma.employee.upsert({
       where: { id: e.id },
-      update: { departmentId: e.dept, workingScheduleId: e.sched, employeeType: e.type },
+      update: { departmentId: departmentIds.get(e.dept), workingScheduleId: e.sched, employeeType: e.type },
       create: {
         id: e.id, name: e.name, workEmail: slug(e.name) + '@peoplepay360.com',
-        jobPosition: e.pos, departmentId: e.dept, workingScheduleId: e.sched,
+        jobPosition: e.pos, departmentId: departmentIds.get(e.dept), workingScheduleId: e.sched,
         employeeType: e.type, status: 'ACTIVE', phone: '+91 90000 00000',
         bankAccount: e.bank, bankIfsc: e.ifsc,
         managerId: manager && manager.id !== e.id ? manager.id : null,

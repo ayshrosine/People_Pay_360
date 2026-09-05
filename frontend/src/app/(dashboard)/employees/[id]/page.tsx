@@ -430,7 +430,7 @@ function SmartButtons({ employeeId }: { employeeId: string }) {
       loading: contracts.isLoading,
     },
     {
-      href: `/attendance?employeeId=${employeeId}`,
+      href: `/time-off/attendance?employeeId=${employeeId}`,
       label: 'Attendance',
       icon: CalendarClock,
       count: attendance.data?.data.length,

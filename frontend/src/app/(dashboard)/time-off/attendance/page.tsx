@@ -36,7 +36,7 @@ function AttendanceView() {
   const employeeId = searchParams.get('employeeId') ?? '';
   const setEmployeeId = React.useCallback(
     (value: string) => {
-      router.replace(value ? `/attendance?employeeId=${value}` : '/attendance');
+      router.replace(value ? `/time-off/attendance?employeeId=${value}` : '/time-off/attendance');
     },
     [router],
   );
@@ -61,7 +61,8 @@ function AttendanceView() {
   return (
     <PageShell
       wide
-      title="Attendance"
+      eyebrow="TIME & ATTENDANCE"
+      title={<>Attendance</>}
       description="Worked hours here feed the payslip computation directly."
       actions={
         can('read', 'WorkingSchedule') ? (

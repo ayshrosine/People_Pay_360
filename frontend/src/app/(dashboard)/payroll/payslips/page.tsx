@@ -37,7 +37,8 @@ function PayslipsView() {
   return (
     <PageShell
       wide
-      title="Payslips"
+      eyebrow="PAYROLL OUTPUT"
+      title={<>Payslips</>}
       description={
         selfService
           ? 'Your payslips across every payrun.'
