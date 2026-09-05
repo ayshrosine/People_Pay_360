@@ -1,9 +1,9 @@
-import { IsUUID, IsDateString, IsOptional, IsString, IsArray } from 'class-validator';
+import { IsDateString, IsOptional, IsString, IsArray } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class PreviewScopeDto {
   @ApiProperty({ example: 'uuid-of-salary-structure' })
-  @IsUUID()
+  @IsString()
   salaryStructureId: string;
 
   @ApiProperty({ example: '2024-01-01' })

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { EmployeeStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class EmployeesService {
@@ -13,19 +14,31 @@ export class EmployeesService {
     limit?: number;
     search?: string;
     sort?: string;
+    departmentId?: string;
+    status?: EmployeeStatus;
+    /** Set by the controller for self-service users; narrows to one record. */
+    scopeToEmployeeId?: string;
   }) {
-    const { view, page, limit, search, sort } = params;
-    const skip = page && limit ? (page - 1) * limit : undefined;
+    const { view, search, sort, departmentId, status, scopeToEmployeeId } = params;
+    const page = params.page && params.page > 0 ? params.page : 1;
+    const limit = params.limit && params.limit > 0 ? params.limit : 50;
+    const skip = (page - 1) * limit;
     const take = limit;
 
-    const where = search
-      ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' as const } },
-            { workEmail: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+    const where: Prisma.EmployeeWhereInput = {
+      ...(scopeToEmployeeId ? { id: scopeToEmployeeId } : {}),
+      ...(departmentId ? { departmentId } : {}),
+      ...(status ? { status } : {}),
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' as const } },
+              { workEmail: { contains: search, mode: 'insensitive' as const } },
+              { jobPosition: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
 
     const employees = await this.prisma.employee.findMany({
       where,
@@ -49,17 +62,34 @@ export class EmployeesService {
     const total = await this.prisma.employee.count({ where });
 
     if (view === 'kanban') {
-      // Group by status for kanban view
-      const grouped = employees.reduce((acc, emp) => {
-        const status = emp.status;
-        if (!acc[status]) acc[status] = [];
-        acc[status].push(emp);
-        return acc;
-      }, {} as Record<string, typeof employees>);
+      // The kanban board groups by department when one is not already filtered,
+      // otherwise by status - matching the view switcher in the UI.
+      const groupBy = params.departmentId ? 'status' : 'department';
+
+      const grouped = employees.reduce(
+        (acc, employee) => {
+          const key =
+            groupBy === 'status'
+              ? employee.status
+              : (employee.department?.name ?? 'Unassigned');
+          (acc[key] ??= []).push(employee);
+          return acc;
+        },
+        {} as Record<string, typeof employees>,
+      );
 
       return {
-        data: grouped,
-        meta: { total, page, limit },
+        data: employees,
+        meta: {
+          total,
+          page,
+          limit,
+          groups: Object.entries(grouped).map(([key, items]) => ({
+            key,
+            count: items.length,
+            employeeIds: items.map((e) => e.id),
+          })),
+        },
       };
     }
 
@@ -88,7 +118,7 @@ export class EmployeesService {
     });
 
     if (!employee) {
-      throw new NotFoundException('Employee not found');
+      throw new NotFoundException({ message: 'Employee not found', code: 'NOT_FOUND' });
     }
 
     return employee;
@@ -101,7 +131,10 @@ export class EmployeesService {
     });
 
     if (existingEmployee) {
-      throw new ConflictException('Employee with this email already exists');
+      throw new ConflictException({
+        message: 'An employee with this work email already exists.',
+        code: 'EMAIL_ALREADY_EXISTS',
+      });
     }
 
     return this.prisma.employee.create({
@@ -120,7 +153,7 @@ export class EmployeesService {
     });
 
     if (!employee) {
-      throw new NotFoundException('Employee not found');
+      throw new NotFoundException({ message: 'Employee not found', code: 'NOT_FOUND' });
     }
 
     // Check if email is being changed and if it already exists
@@ -130,7 +163,10 @@ export class EmployeesService {
       });
 
       if (existingEmployee) {
-        throw new ConflictException('Employee with this email already exists');
+        throw new ConflictException({
+        message: 'An employee with this work email already exists.',
+        code: 'EMAIL_ALREADY_EXISTS',
+      });
       }
     }
 
@@ -151,7 +187,7 @@ export class EmployeesService {
     });
 
     if (!employee) {
-      throw new NotFoundException('Employee not found');
+      throw new NotFoundException({ message: 'Employee not found', code: 'NOT_FOUND' });
     }
 
     return this.prisma.employee.delete({
@@ -165,7 +201,7 @@ export class EmployeesService {
     });
 
     if (!employee) {
-      throw new NotFoundException('Employee not found');
+      throw new NotFoundException({ message: 'Employee not found', code: 'NOT_FOUND' });
     }
 
     return this.prisma.contract.findMany({
@@ -184,7 +220,7 @@ export class EmployeesService {
     });
 
     if (!employee) {
-      throw new NotFoundException('Employee not found');
+      throw new NotFoundException({ message: 'Employee not found', code: 'NOT_FOUND' });
     }
 
     return this.prisma.attendance.findMany({
@@ -199,7 +235,7 @@ export class EmployeesService {
     });
 
     if (!employee) {
-      throw new NotFoundException('Employee not found');
+      throw new NotFoundException({ message: 'Employee not found', code: 'NOT_FOUND' });
     }
 
     return this.prisma.timeOffRequest.findMany({
@@ -217,7 +253,7 @@ export class EmployeesService {
     });
 
     if (!employee) {
-      throw new NotFoundException('Employee not found');
+      throw new NotFoundException({ message: 'Employee not found', code: 'NOT_FOUND' });
     }
 
     // Get contracts, time off requests, and schedule changes

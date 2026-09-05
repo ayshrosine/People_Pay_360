@@ -1,4 +1,4 @@
-import { IsEmail, IsString, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { IsEmail, IsString, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { RoleName } from '@prisma/client';
 
@@ -17,6 +17,6 @@ export class CreateUserDto {
 
   @ApiProperty({ example: 'uuid-of-employee', required: false })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   employeeId?: string;
 }

@@ -1,11 +1,11 @@
-import { IsString, IsOptional, IsUUID, IsDateString, IsNumber, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsNumber, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ContractStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
 
 export class CreateContractDto {
   @ApiProperty({ example: 'uuid-of-employee' })
-  @IsUUID()
+  @IsString()
   employeeId: string;
 
   @ApiProperty({ example: 'Engineering', required: false })
@@ -39,12 +39,12 @@ export class CreateContractDto {
 
   @ApiProperty({ example: 'uuid-of-salary-structure', required: false })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   salaryStructureId?: string;
 
   @ApiProperty({ example: 'uuid-of-working-schedule', required: false })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   workingScheduleId?: string;
 
   @ApiProperty({ enum: ContractStatus, required: false })

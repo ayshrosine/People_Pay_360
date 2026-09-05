@@ -1,10 +1,16 @@
 import { SetMetadata } from '@nestjs/common';
+import { Action, Subject } from '../abilities/ability.factory';
 
 export const ABILITY_KEY = 'ability';
+
 export interface AbilityMetadata {
-  action: string;
-  subject: string;
+  action: Action;
+  subject: Subject;
 }
 
-export const CheckAbility = (metadata: AbilityMetadata) => 
-  SetMetadata(ABILITY_KEY, metadata);
+/**
+ * Declares the ability required to call a handler. Enforced by `AbilitiesGuard`,
+ * which is registered globally in `CommonModule`.
+ */
+export const CheckAbility = (...requirements: AbilityMetadata[]) =>
+  SetMetadata(ABILITY_KEY, requirements);

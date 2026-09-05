@@ -1,33 +1,44 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AbilityFactory } from '../abilities/ability.factory';
+import { AbilityFactory, RequestUser } from '../abilities/ability.factory';
 import { ABILITY_KEY, AbilityMetadata } from '../decorators/check-ability.decorator';
-import { ForbiddenException } from '@nestjs/common';
 
 @Injectable()
 export class AbilitiesGuard implements CanActivate {
   constructor(
-    private reflector: Reflector,
-    private abilityFactory: AbilityFactory,
+    private readonly reflector: Reflector,
+    private readonly abilityFactory: AbilityFactory,
   ) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredAbility = this.reflector.get<AbilityMetadata>(
-      ABILITY_KEY,
+    // Merge handler- and class-level requirements so a controller can declare a
+    // baseline and a single method can tighten it.
+    const requirements = this.reflector.getAllAndOverride<AbilityMetadata[]>(ABILITY_KEY, [
       context.getHandler(),
-    );
+      context.getClass(),
+    ]);
 
-    if (!requiredAbility) {
+    if (!requirements || requirements.length === 0) {
       return true;
     }
 
-    const { user } = context.switchToHttp().getRequest();
+    const user = context.switchToHttp().getRequest<{ user?: RequestUser }>().user;
     const ability = this.abilityFactory.defineAbilityFor(user);
 
-    if (ability.can(requiredAbility.action, requiredAbility.subject)) {
-      return true;
+    for (const { action, subject } of requirements) {
+      if (!ability.can(action, subject)) {
+        throw new ForbiddenException({
+          message: `You do not have permission to ${action} ${subject}.`,
+          code: 'FORBIDDEN',
+        });
+      }
     }
 
-    throw new ForbiddenException('You do not have permission to perform this action');
+    return true;
   }
 }

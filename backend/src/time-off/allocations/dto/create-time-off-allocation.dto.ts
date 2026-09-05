@@ -1,14 +1,14 @@
-import { IsUUID, IsNumber, IsDateString, IsString, IsOptional } from 'class-validator';
+import { IsNumber, IsDateString, IsString, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class CreateTimeOffAllocationDto {
   @ApiProperty({ example: 'uuid-of-employee' })
-  @IsUUID()
+  @IsString()
   employeeId: string;
 
   @ApiProperty({ example: 'uuid-of-time-off-type' })
-  @IsUUID()
+  @IsString()
   timeOffTypeId: string;
 
   @ApiProperty({ example: 20 })

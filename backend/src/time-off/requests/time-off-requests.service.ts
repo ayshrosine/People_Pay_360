@@ -45,44 +45,51 @@ export class TimeOffRequestsService {
   }
 
   async create(createTimeOffRequestDto: CreateTimeOffRequestDto) {
+    // The controller defaults this to the caller's own employee record; if it
+    // is still missing the caller is a user with no linked employee, and
+    // creating the row would fail on the foreign key with an opaque error.
+    const employeeId = createTimeOffRequestDto.employeeId;
+    if (!employeeId) {
+      throw new BadRequestException({
+        message: 'This account is not linked to an employee record, so it cannot request time off.',
+        code: 'NO_LINKED_EMPLOYEE',
+      });
+    }
+
     // Check if the time off type requires allocation
     const timeOffType = await this.prisma.timeOffType.findUnique({
       where: { id: createTimeOffRequestDto.timeOffTypeId },
     });
 
     if (!timeOffType) {
-      throw new NotFoundException('Time off type not found');
+      throw new NotFoundException({ message: 'Time off type not found', code: 'NOT_FOUND' });
     }
 
     // If allocation is required, check if the employee has sufficient balance
     if (timeOffType.requiresAllocation) {
-      const allocation = await this.prisma.timeOffAllocation.findFirst({
-        where: {
-          employeeId: createTimeOffRequestDto.employeeId,
-          timeOffTypeId: createTimeOffRequestDto.timeOffTypeId,
-          status: 'Approved',
-          validFrom: { lte: new Date() },
-          OR: [
-            { validTo: null },
-            { validTo: { gte: new Date() } },
-          ],
-        },
-      });
+      const allocation = await this.findUsableAllocation(
+        employeeId,
+        createTimeOffRequestDto.timeOffTypeId,
+      );
 
       if (!allocation) {
-        throw new BadRequestException('No approved allocation found for this time off type');
+        throw new BadRequestException({
+          message: 'No approved allocation found for this time off type.',
+          code: 'NO_ALLOCATION',
+        });
       }
 
       if (Number(allocation.remaining) < createTimeOffRequestDto.duration) {
-        throw new BadRequestException(
-          `Insufficient balance. Available: ${allocation.remaining}, Requested: ${createTimeOffRequestDto.duration}`,
-        );
+        throw new BadRequestException({
+          message: `Insufficient balance. Available: ${allocation.remaining}, requested: ${createTimeOffRequestDto.duration}.`,
+          code: 'INSUFFICIENT_BALANCE',
+        });
       }
     }
 
     return this.prisma.timeOffRequest.create({
       data: {
-        employeeId: createTimeOffRequestDto.employeeId || '',
+        employeeId,
         timeOffTypeId: createTimeOffRequestDto.timeOffTypeId,
         startDate: new Date(createTimeOffRequestDto.startDate),
         endDate: new Date(createTimeOffRequestDto.endDate),
@@ -97,63 +104,98 @@ export class TimeOffRequestsService {
     });
   }
 
+  /**
+   * Approving a leave request and debiting the allocation must be one atomic
+   * unit: a partial application would leave the employee's remaining balance
+   * permanently wrong, and `remaining` is the value every later request is
+   * validated against.
+   */
   async approve(id: string, approvedById: string) {
     const request = await this.prisma.timeOffRequest.findUnique({
       where: { id },
-      include: {
-        timeOffType: true,
-      },
+      include: { timeOffType: true },
     });
 
     if (!request) {
-      throw new NotFoundException('Time off request not found');
+      throw new NotFoundException({
+        message: 'Time off request not found',
+        code: 'NOT_FOUND',
+      });
     }
 
     if (request.status !== TimeOffRequestStatus.TO_APPROVE) {
-      throw new BadRequestException('Request is not in a state that can be approved');
+      throw new BadRequestException({
+        message: `A request in status ${request.status} cannot be approved.`,
+        code: 'INVALID_REQUEST_STATE',
+      });
     }
 
-    // Update the request status
-    const updatedRequest = await this.prisma.timeOffRequest.update({
-      where: { id },
-      data: {
-        status: TimeOffRequestStatus.APPROVED,
-        approvedById,
-        approvedAt: new Date(),
-      },
-      include: {
-        employee: true,
-        timeOffType: true,
-      },
-    });
+    let allocationId: string | null = null;
 
-    // If the time off type requires allocation, update the allocation balance
     if (request.timeOffType.requiresAllocation) {
-      const allocation = await this.prisma.timeOffAllocation.findFirst({
-        where: {
-          employeeId: request.employeeId,
-          timeOffTypeId: request.timeOffTypeId,
-          status: 'Approved',
-          validFrom: { lte: new Date() },
-          OR: [
-            { validTo: null },
-            { validTo: { gte: new Date() } },
-          ],
-        },
-      });
+      const allocation = await this.findUsableAllocation(
+        request.employeeId,
+        request.timeOffTypeId,
+      );
 
-      if (allocation) {
-        await this.prisma.timeOffAllocation.update({
-          where: { id: allocation.id },
-          data: {
-            taken: Number(allocation.taken) + request.duration,
-            remaining: Number(allocation.remaining) - request.duration,
-          },
+      if (!allocation) {
+        throw new BadRequestException({
+          message: 'No approved allocation covers this request.',
+          code: 'NO_ALLOCATION',
         });
       }
+
+      // Re-check at approval time: the balance may have been consumed by
+      // another request that was approved after this one was submitted.
+      if (Number(allocation.remaining) < request.duration) {
+        throw new BadRequestException({
+          message: `Insufficient balance. Available: ${allocation.remaining}, requested: ${request.duration}.`,
+          code: 'INSUFFICIENT_BALANCE',
+        });
+      }
+
+      allocationId = allocation.id;
     }
 
+    const [updatedRequest] = await this.prisma.$transaction([
+      this.prisma.timeOffRequest.update({
+        where: { id },
+        data: {
+          status: TimeOffRequestStatus.APPROVED,
+          approvedById,
+          approvedAt: new Date(),
+        },
+        include: { employee: true, timeOffType: true },
+      }),
+      ...(allocationId
+        ? [
+            this.prisma.timeOffAllocation.update({
+              where: { id: allocationId },
+              data: {
+                taken: { increment: request.duration },
+                remaining: { decrement: request.duration },
+              },
+            }),
+          ]
+        : []),
+    ]);
+
     return updatedRequest;
+  }
+
+  /** The approved, currently-valid allocation a request draws down from. */
+  private findUsableAllocation(employeeId: string, timeOffTypeId: string) {
+    const now = new Date();
+    return this.prisma.timeOffAllocation.findFirst({
+      where: {
+        employeeId,
+        timeOffTypeId,
+        status: 'Approved',
+        validFrom: { lte: now },
+        OR: [{ validTo: null }, { validTo: { gte: now } }],
+      },
+      orderBy: { validFrom: 'asc' },
+    });
   }
 
   async refuse(id: string, approvedById: string) {

@@ -1,32 +1,51 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+  BadRequestException,
+} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AttendanceService } from './attendance.service';
-import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { CheckInDto } from './dto/check-in.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CheckAbility } from '../common/decorators/check-ability.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { RequestUser } from '../common/abilities/ability.factory';
+import {
+  assertOwnsEmployeeRecord,
+  isSelfServiceOnly,
+  resolveEmployeeScope,
+} from '../common/guards/scope.util';
 
+@ApiTags('attendance')
+@ApiBearerAuth()
 @Controller('attendance')
-@UseGuards(JwtAuthGuard)
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
   @Get('widget/today')
-  async getTodayWidget(@CurrentUser() user: any) {
-    return this.attendanceService.getTodayWidget(user.employeeId);
+  async getTodayWidget(@CurrentUser() user: RequestUser) {
+    return this.attendanceService.getTodayWidget(user.employeeId ?? undefined);
   }
 
   @Get()
   @CheckAbility({ action: 'read', subject: 'Attendance' })
   async findAll(
+    @CurrentUser() user: RequestUser,
     @Query('employeeId') employeeId?: string,
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
     @Query('status') status?: string,
   ) {
     return this.attendanceService.findAll({
-      employeeId,
+      // Self-service users only ever see their own attendance.
+      employeeId: resolveEmployeeScope(user, employeeId),
       dateFrom: dateFrom ? new Date(dateFrom) : undefined,
       dateTo: dateTo ? new Date(dateTo) : undefined,
       status,
@@ -35,27 +54,41 @@ export class AttendanceController {
 
   @Get(':id')
   @CheckAbility({ action: 'read', subject: 'Attendance' })
-  async findOne(@Param('id') id: string) {
-    return this.attendanceService.findOne(id);
+  async findOne(@Param('id') id: string, @CurrentUser() user: RequestUser) {
+    const attendance = await this.attendanceService.findOne(id);
+    assertOwnsEmployeeRecord(user, attendance.employeeId);
+    return attendance;
   }
 
   @Post('check-in')
   @HttpCode(HttpStatus.OK)
-  async checkIn(@Body() checkInDto: CheckInDto, @CurrentUser() user: any) {
-    // If employeeId is not provided, use the current user's employeeId
-    const employeeId = checkInDto.employeeId || user.employeeId;
+  async checkIn(@Body() checkInDto: CheckInDto, @CurrentUser() user: RequestUser) {
+    // Employees may only check themselves in; HR may check anyone in.
+    const employeeId = isSelfServiceOnly(user)
+      ? resolveEmployeeScope(user, undefined)!
+      : (checkInDto.employeeId ?? user.employeeId);
+
+    if (!employeeId) {
+      throw new BadRequestException({
+        message: 'No employee record is linked to this account.',
+        code: 'NO_LINKED_EMPLOYEE',
+      });
+    }
+
     return this.attendanceService.checkIn(employeeId);
   }
 
   @Post(':id/check-out')
   @HttpCode(HttpStatus.OK)
-  async checkOut(@Param('id') id: string) {
+  async checkOut(@Param('id') id: string, @CurrentUser() user: RequestUser) {
+    const attendance = await this.attendanceService.findOne(id);
+    assertOwnsEmployeeRecord(user, attendance.employeeId);
     return this.attendanceService.checkOut(id);
   }
 
   @Patch(':id')
   @CheckAbility({ action: 'update', subject: 'Attendance' })
-  async update(@Param('id') id: string, @Body() updateAttendanceDto: UpdateAttendanceDto, @CurrentUser() user: any) {
+  async update(@Param('id') id: string, @Body() updateAttendanceDto: UpdateAttendanceDto, @CurrentUser() user: RequestUser) {
     return this.attendanceService.update(id, updateAttendanceDto, user.id);
   }
 }

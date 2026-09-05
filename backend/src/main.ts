@@ -1,32 +1,43 @@
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as Sentry from '@sentry/node';
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
+import { writeFileSync } from 'node:fs';
 import { AppModule } from './app.module';
 
-async function bootstrap() {
-  // Initialize Sentry
+// Sentry must be initialised before the Nest application is created so that
+// its instrumentation can patch the runtime first. It is a no-op without a DSN.
+if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
-    environment: process.env.SENTRY_ENVIRONMENT || 'development',
+    environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development',
     integrations: [nodeProfilingIntegration()],
     tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 1.0),
     profilesSampleRate: 1.0,
   });
+}
 
-  const app = await NestFactory.create(AppModule);
+async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+  const app = await NestFactory.create(AppModule, { bufferLogs: false });
 
-  // Enable CORS
+  // Multiple origins may be supplied comma-separated (local dev + deployed frontend).
+  const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: corsOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   });
 
-  // Global prefix
   app.setGlobalPrefix('api/v1');
+  app.enableShutdownHooks();
 
-  // Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('PeoplePay360 API')
     .setDescription('HR & Payroll Management System API')
@@ -45,13 +56,26 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    jsonDocumentUrl: 'api/docs-json',
+  });
 
-  const port = process.env.PORT || 4000;
-  await app.listen(port);
+  // Emitting the spec to disk lets the frontend regenerate its typed client
+  // (`npm run codegen`) without the API having to be running.
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      writeFileSync('openapi.json', JSON.stringify(document, null, 2));
+    } catch {
+      /* non-fatal: the spec is still served over HTTP */
+    }
+  }
 
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+  const port = Number(process.env.PORT ?? 4000);
+  await app.listen(port, '0.0.0.0');
+
+  logger.log(`API listening on http://localhost:${port}/api/v1`);
+  logger.log(`Swagger UI   http://localhost:${port}/api/docs`);
+  logger.log(`OpenAPI JSON http://localhost:${port}/api/docs-json`);
 }
 
-bootstrap();
+void bootstrap();

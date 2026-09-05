@@ -55,7 +55,7 @@ export class ContractsService {
     });
 
     if (!contract) {
-      throw new NotFoundException('Contract not found');
+      throw new NotFoundException({ message: 'Contract not found', code: 'NOT_FOUND' });
     }
 
     return contract;
@@ -96,7 +96,7 @@ export class ContractsService {
     });
 
     if (!contract) {
-      throw new NotFoundException('Contract not found');
+      throw new NotFoundException({ message: 'Contract not found', code: 'NOT_FOUND' });
     }
 
     // If status is being set to RUNNING, check for overlaps
@@ -144,7 +144,7 @@ export class ContractsService {
     });
 
     if (!contract) {
-      throw new NotFoundException('Contract not found');
+      throw new NotFoundException({ message: 'Contract not found', code: 'NOT_FOUND' });
     }
 
     return this.prisma.contract.delete({
@@ -193,9 +193,10 @@ export class ContractsService {
     });
 
     if (overlappingContracts.length > 0) {
-      throw new ConflictException(
-        'Cannot create/update contract: overlapping RUNNING contracts are not allowed for the same employee',
-      );
+      throw new ConflictException({
+        message: 'This employee already has an active contract covering this period.',
+        code: 'OVERLAPPING_CONTRACT',
+      });
     }
   }
 }

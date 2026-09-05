@@ -1,11 +1,17 @@
 import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+
+/**
+ * `expiresIn` is typed as a template-literal duration ("15m", "7d", ...) that a
+ * value read from the environment cannot be narrowed to at compile time.
+ */
+type JwtExpiry = NonNullable<JwtSignOptions['expiresIn']>;
 
 @Injectable()
 export class AuthService {
@@ -22,12 +28,15 @@ export class AuthService {
     });
 
     if (!user || !user.isActive) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException({ message: 'Invalid credentials', code: 'INVALID_CREDENTIALS' });
     }
 
-    const isPasswordValid = await argon2.verify(user.passwordHash, loginDto.password);
+    const isPasswordValid = await argon2
+      .verify(user.passwordHash, loginDto.password)
+      .catch(() => false);
+
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException({ message: 'Invalid credentials', code: 'INVALID_CREDENTIALS' });
     }
 
     const tokens = await this.generateTokens(user.id, user.email, user.role, user.employeeId);
@@ -56,7 +65,10 @@ export class AuthService {
       });
 
       if (!user || !user.isActive) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException({
+          message: 'Invalid refresh token',
+          code: 'INVALID_REFRESH_TOKEN',
+        });
       }
 
       const tokens = await this.generateTokens(user.id, user.email, user.role, user.employeeId);
@@ -66,7 +78,10 @@ export class AuthService {
         refreshToken: tokens.refreshToken,
       };
     } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException({
+        message: 'Invalid refresh token',
+        code: 'INVALID_REFRESH_TOKEN',
+      });
     }
   }
 
@@ -85,11 +100,22 @@ export class AuthService {
   async getCurrentUser(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { employee: true },
+      // Explicit select: `include` would return passwordHash to the client.
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isActive: true,
+        employeeId: true,
+        createdAt: true,
+        employee: {
+          include: { department: true, workingSchedule: true },
+        },
+      },
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException({ message: 'User not found', code: 'NOT_FOUND' });
     }
 
     return user;
@@ -117,18 +143,30 @@ export class AuthService {
     });
   }
 
-  private async generateTokens(userId: string, email: string, role: string, employeeId: string | null) {
+  private async generateTokens(
+    userId: string,
+    email: string,
+    role: string,
+    employeeId: string | null,
+  ) {
     const payload = { sub: userId, email, role, employeeId };
-    
+
+    // Lifetimes come from configuration rather than being hardcoded, so a
+    // deployment can shorten them without a code change.
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-      expiresIn: '15m',
+      expiresIn: (this.configService.get<string>('JWT_ACCESS_EXPIRY') ??
+          '15m') as JwtExpiry,
     });
 
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      expiresIn: '7d',
-    });
+    const refreshToken = this.jwtService.sign(
+      { ...payload, tokenType: 'refresh' },
+      {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+        expiresIn: (this.configService.get<string>('JWT_REFRESH_EXPIRY') ??
+            '7d') as JwtExpiry,
+      },
+    );
 
     return { accessToken, refreshToken };
   }

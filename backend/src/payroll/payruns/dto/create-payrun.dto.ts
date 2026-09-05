@@ -1,4 +1,4 @@
-import { IsString, IsUUID, IsDateString, IsArray } from 'class-validator';
+import { IsString, IsDateString, IsArray, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePayrunDto {
@@ -7,7 +7,7 @@ export class CreatePayrunDto {
   name: string;
 
   @ApiProperty({ example: 'uuid-of-salary-structure' })
-  @IsUUID()
+  @IsString()
   salaryStructureId: string;
 
   @ApiProperty({ example: '2024-01-01' })
@@ -18,12 +18,13 @@ export class CreatePayrunDto {
   @IsDateString()
   periodEnd: string;
 
+  @IsOptional()
   @ApiProperty({ example: 'Full-time', required: false })
   @IsString()
   employeeType?: string;
 
   @ApiProperty({ example: ['uuid1', 'uuid2', 'uuid3'] })
   @IsArray()
-  @IsUUID('4', { each: true, message: 'Each employee ID must be a valid UUID' })
+  @IsString({ each: true })
   employeeIds: string[];
 }

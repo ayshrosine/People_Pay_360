@@ -1,10 +1,10 @@
-import { IsUUID, IsDateString, IsOptional, IsEnum } from 'class-validator';
+import { IsDateString, IsOptional, IsEnum, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { AttendanceStatus } from '@prisma/client';
 
 export class CreateAttendanceDto {
   @ApiProperty({ example: 'uuid-of-employee' })
-  @IsUUID()
+  @IsString()
   employeeId: string;
 
   @ApiProperty({ example: '2024-01-01T09:00:00Z' })

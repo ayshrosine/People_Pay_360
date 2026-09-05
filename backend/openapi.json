@@ -1,0 +1,3220 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_getCurrentUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "operationId": "AuthController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "operationId": "UsersController_findAll",
+        "parameters": [
+          {
+            "name": "role",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/departments": {
+      "get": {
+        "operationId": "DepartmentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Departments"
+        ]
+      },
+      "post": {
+        "operationId": "DepartmentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDepartmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Departments"
+        ]
+      }
+    },
+    "/api/v1/departments/{id}": {
+      "get": {
+        "operationId": "DepartmentsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Departments"
+        ]
+      },
+      "patch": {
+        "operationId": "DepartmentsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDepartmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Departments"
+        ]
+      },
+      "delete": {
+        "operationId": "DepartmentsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Departments"
+        ]
+      }
+    },
+    "/api/v1/employees": {
+      "get": {
+        "operationId": "EmployeesController_findAll",
+        "parameters": [
+          {
+            "name": "view",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "departmentId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "employees"
+        ]
+      },
+      "post": {
+        "operationId": "EmployeesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmployeeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "employees"
+        ]
+      }
+    },
+    "/api/v1/employees/{id}": {
+      "get": {
+        "operationId": "EmployeesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "employees"
+        ]
+      },
+      "patch": {
+        "operationId": "EmployeesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmployeeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "employees"
+        ]
+      },
+      "delete": {
+        "operationId": "EmployeesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "employees"
+        ]
+      }
+    },
+    "/api/v1/employees/{id}/contracts": {
+      "get": {
+        "operationId": "EmployeesController_getContracts",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "employees"
+        ]
+      }
+    },
+    "/api/v1/employees/{id}/attendance": {
+      "get": {
+        "operationId": "EmployeesController_getAttendance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "employees"
+        ]
+      }
+    },
+    "/api/v1/employees/{id}/time-off": {
+      "get": {
+        "operationId": "EmployeesController_getTimeOff",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "employees"
+        ]
+      }
+    },
+    "/api/v1/employees/{id}/timeline": {
+      "get": {
+        "operationId": "EmployeesController_getTimeline",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "employees"
+        ]
+      }
+    },
+    "/api/v1/working-schedules": {
+      "get": {
+        "operationId": "WorkingSchedulesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WorkingSchedules"
+        ]
+      },
+      "post": {
+        "operationId": "WorkingSchedulesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkingScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WorkingSchedules"
+        ]
+      }
+    },
+    "/api/v1/working-schedules/{id}": {
+      "get": {
+        "operationId": "WorkingSchedulesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WorkingSchedules"
+        ]
+      },
+      "patch": {
+        "operationId": "WorkingSchedulesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkingScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WorkingSchedules"
+        ]
+      },
+      "delete": {
+        "operationId": "WorkingSchedulesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WorkingSchedules"
+        ]
+      }
+    },
+    "/api/v1/contracts": {
+      "get": {
+        "operationId": "ContractsController_findAll",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contracts"
+        ]
+      },
+      "post": {
+        "operationId": "ContractsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContractDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contracts"
+        ]
+      }
+    },
+    "/api/v1/contracts/active": {
+      "get": {
+        "operationId": "ContractsController_getActiveContract",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contracts"
+        ]
+      }
+    },
+    "/api/v1/contracts/{id}": {
+      "get": {
+        "operationId": "ContractsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contracts"
+        ]
+      },
+      "patch": {
+        "operationId": "ContractsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContractDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contracts"
+        ]
+      },
+      "delete": {
+        "operationId": "ContractsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Contracts"
+        ]
+      }
+    },
+    "/api/v1/attendance/widget/today": {
+      "get": {
+        "operationId": "AttendanceController_getTodayWidget",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance": {
+      "get": {
+        "operationId": "AttendanceController_findAll",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/{id}": {
+      "get": {
+        "operationId": "AttendanceController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "attendance"
+        ]
+      },
+      "patch": {
+        "operationId": "AttendanceController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAttendanceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/check-in": {
+      "post": {
+        "operationId": "AttendanceController_checkIn",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckInDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/attendance/{id}/check-out": {
+      "post": {
+        "operationId": "AttendanceController_checkOut",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/v1/time-off/types": {
+      "get": {
+        "operationId": "TimeOffTypesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffTypes"
+        ]
+      },
+      "post": {
+        "operationId": "TimeOffTypesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTimeOffTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffTypes"
+        ]
+      }
+    },
+    "/api/v1/time-off/types/{id}": {
+      "get": {
+        "operationId": "TimeOffTypesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffTypes"
+        ]
+      },
+      "patch": {
+        "operationId": "TimeOffTypesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTimeOffTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffTypes"
+        ]
+      },
+      "delete": {
+        "operationId": "TimeOffTypesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffTypes"
+        ]
+      }
+    },
+    "/api/v1/time-off/allocations": {
+      "get": {
+        "operationId": "TimeOffAllocationsController_findAll",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffAllocations"
+        ]
+      },
+      "post": {
+        "operationId": "TimeOffAllocationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTimeOffAllocationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffAllocations"
+        ]
+      }
+    },
+    "/api/v1/time-off/allocations/{id}": {
+      "get": {
+        "operationId": "TimeOffAllocationsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffAllocations"
+        ]
+      }
+    },
+    "/api/v1/time-off/allocations/{id}/approve": {
+      "patch": {
+        "operationId": "TimeOffAllocationsController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffAllocations"
+        ]
+      }
+    },
+    "/api/v1/time-off/requests": {
+      "get": {
+        "operationId": "TimeOffRequestsController_findAll",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffRequests"
+        ]
+      },
+      "post": {
+        "operationId": "TimeOffRequestsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTimeOffRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffRequests"
+        ]
+      }
+    },
+    "/api/v1/time-off/requests/{id}": {
+      "get": {
+        "operationId": "TimeOffRequestsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffRequests"
+        ]
+      }
+    },
+    "/api/v1/time-off/requests/{id}/approve": {
+      "patch": {
+        "operationId": "TimeOffRequestsController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffRequests"
+        ]
+      }
+    },
+    "/api/v1/time-off/requests/{id}/refuse": {
+      "patch": {
+        "operationId": "TimeOffRequestsController_refuse",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "TimeOffRequests"
+        ]
+      }
+    },
+    "/api/v1/payroll/structures": {
+      "get": {
+        "operationId": "SalaryStructuresController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalaryStructures"
+        ]
+      },
+      "post": {
+        "operationId": "SalaryStructuresController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSalaryStructureDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalaryStructures"
+        ]
+      }
+    },
+    "/api/v1/payroll/structures/{id}": {
+      "get": {
+        "operationId": "SalaryStructuresController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalaryStructures"
+        ]
+      },
+      "patch": {
+        "operationId": "SalaryStructuresController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSalaryStructureDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalaryStructures"
+        ]
+      },
+      "delete": {
+        "operationId": "SalaryStructuresController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalaryStructures"
+        ]
+      }
+    },
+    "/api/v1/payroll/structures/{structureId}/rules": {
+      "get": {
+        "operationId": "SalaryRulesController_findAll",
+        "parameters": [
+          {
+            "name": "structureId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalaryRules"
+        ]
+      },
+      "post": {
+        "operationId": "SalaryRulesController_create",
+        "parameters": [
+          {
+            "name": "structureId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSalaryRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalaryRules"
+        ]
+      }
+    },
+    "/api/v1/payroll/structures/{structureId}/rules/{ruleId}": {
+      "get": {
+        "operationId": "SalaryRulesController_findOne",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalaryRules"
+        ]
+      },
+      "patch": {
+        "operationId": "SalaryRulesController_update",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSalaryRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalaryRules"
+        ]
+      },
+      "delete": {
+        "operationId": "SalaryRulesController_remove",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalaryRules"
+        ]
+      }
+    },
+    "/api/v1/payroll/rules/validate": {
+      "post": {
+        "operationId": "SalaryRulesValidationController_validateRule",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SalaryRulesValidation"
+        ]
+      }
+    },
+    "/api/v1/payroll/payruns/preview-scope": {
+      "post": {
+        "operationId": "PayrunsController_previewScope",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewScopeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      }
+    },
+    "/api/v1/payroll/payruns": {
+      "get": {
+        "operationId": "PayrunsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      },
+      "post": {
+        "operationId": "PayrunsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePayrunDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      }
+    },
+    "/api/v1/payroll/payruns/{id}": {
+      "get": {
+        "operationId": "PayrunsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      }
+    },
+    "/api/v1/payroll/payruns/{id}/compute": {
+      "post": {
+        "operationId": "PayrunsController_compute",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      }
+    },
+    "/api/v1/payroll/payruns/{id}/validate": {
+      "post": {
+        "operationId": "PayrunsController_validate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      }
+    },
+    "/api/v1/payroll/payruns/{id}/mark-paid": {
+      "post": {
+        "operationId": "PayrunsController_markPaid",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      }
+    },
+    "/api/v1/payroll/payruns/{id}/send-payslips": {
+      "post": {
+        "operationId": "PayrunsController_sendPayslips",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      }
+    },
+    "/api/v1/payroll/payslips": {
+      "get": {
+        "operationId": "PayslipsController_findAll",
+        "parameters": [
+          {
+            "name": "payrunId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "employeeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/payslips/{id}": {
+      "get": {
+        "operationId": "PayslipsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/payslips/{id}/pdf": {
+      "get": {
+        "operationId": "PayslipsController_getPdf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Returns a URL to the payslip PDF, generating it if needed",
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/payslips/{id}/pdf/download": {
+      "get": {
+        "operationId": "PayslipsController_downloadPdf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Streams the payslip PDF directly (no object storage required)",
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/payslips/{id}/explain": {
+      "get": {
+        "operationId": "PayslipsController_explain",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Plain-English explanation of how this payslip was computed",
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/payroll/payslips/{id}/recompute": {
+      "post": {
+        "operationId": "PayslipsController_recompute",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "payroll"
+        ]
+      }
+    },
+    "/api/v1/dashboard/kpis": {
+      "get": {
+        "operationId": "DashboardController_getKPIs",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "departmentId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "employeeType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/v1/dashboard/salary-cost-by-department": {
+      "get": {
+        "operationId": "DashboardController_getSalaryCostByDepartment",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "departmentId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/v1/dashboard/monthly-net-salary-trend": {
+      "get": {
+        "operationId": "DashboardController_getMonthlyNetSalaryTrend",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "departmentId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/v1/dashboard/payslip-status-breakdown": {
+      "get": {
+        "operationId": "DashboardController_getPayslipStatusBreakdown",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "departmentId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/v1/dashboard/alerts": {
+      "get": {
+        "operationId": "DashboardController_getAlerts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/v1/dashboard/attendance-overview": {
+      "get": {
+        "operationId": "DashboardController_getAttendanceOverview",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "departmentId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/v1/dashboard/time-off-overview": {
+      "get": {
+        "operationId": "DashboardController_getTimeOffOverview",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "departmentId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/api/v1/dashboard/department-overview": {
+      "get": {
+        "operationId": "DashboardController_getDepartmentOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "PeoplePay360 API",
+    "description": "HR & Payroll Management System API",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "users",
+      "description": "User management"
+    },
+    {
+      "name": "employees",
+      "description": "Employee management"
+    },
+    {
+      "name": "departments",
+      "description": "Department management"
+    },
+    {
+      "name": "contracts",
+      "description": "Contract management"
+    },
+    {
+      "name": "working-schedules",
+      "description": "Working schedule management"
+    },
+    {
+      "name": "attendance",
+      "description": "Attendance tracking"
+    },
+    {
+      "name": "time-off",
+      "description": "Time off management"
+    },
+    {
+      "name": "payroll",
+      "description": "Payroll management"
+    },
+    {
+      "name": "dashboard",
+      "description": "Dashboard analytics"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123",
+            "minLength": 6
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RefreshTokenDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "oldPassword": {
+            "type": "string",
+            "example": "oldPassword123"
+          },
+          "newPassword": {
+            "type": "string",
+            "example": "newPassword456",
+            "minLength": 6
+          }
+        },
+        "required": [
+          "oldPassword",
+          "newPassword"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123",
+            "minLength": 6
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "EMPLOYEE",
+              "HR_MANAGER",
+              "HR_PAYROLL_USER",
+              "HR_PAYROLL_MANAGER",
+              "ADMIN"
+            ],
+            "example": "EMPLOYEE"
+          },
+          "employeeId": {
+            "type": "string",
+            "example": "uuid-of-employee"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "role"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "EMPLOYEE",
+              "HR_MANAGER",
+              "HR_PAYROLL_USER",
+              "HR_PAYROLL_MANAGER",
+              "ADMIN"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateDepartmentDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Engineering"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateDepartmentDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Engineering"
+          }
+        }
+      },
+      "CreateEmployeeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "workEmail": {
+            "type": "string",
+            "example": "john.doe@example.com"
+          },
+          "jobPosition": {
+            "type": "string",
+            "example": "Software Engineer"
+          },
+          "departmentId": {
+            "type": "string",
+            "example": "uuid-of-department"
+          },
+          "managerId": {
+            "type": "string",
+            "example": "uuid-of-manager"
+          },
+          "workingScheduleId": {
+            "type": "string",
+            "example": "uuid-of-working-schedule"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "ON_LEAVE",
+              "TERMINATED"
+            ]
+          },
+          "avatarUrl": {
+            "type": "string",
+            "example": "https://example.com/avatar.jpg"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "employeeType": {
+            "type": "string",
+            "example": "Full-time"
+          },
+          "bankAccount": {
+            "type": "string",
+            "example": "1234567890"
+          },
+          "bankIfsc": {
+            "type": "string",
+            "example": "SBIN0001234"
+          }
+        },
+        "required": [
+          "name",
+          "workEmail"
+        ]
+      },
+      "UpdateEmployeeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "workEmail": {
+            "type": "string",
+            "example": "john.doe@example.com"
+          },
+          "jobPosition": {
+            "type": "string",
+            "example": "Software Engineer"
+          },
+          "departmentId": {
+            "type": "string",
+            "example": "uuid-of-department"
+          },
+          "managerId": {
+            "type": "string",
+            "example": "uuid-of-manager"
+          },
+          "workingScheduleId": {
+            "type": "string",
+            "example": "uuid-of-working-schedule"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "ON_LEAVE",
+              "TERMINATED"
+            ]
+          },
+          "avatarUrl": {
+            "type": "string",
+            "example": "https://example.com/avatar.jpg"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "employeeType": {
+            "type": "string",
+            "example": "Full-time"
+          },
+          "bankAccount": {
+            "type": "string",
+            "example": "1234567890"
+          },
+          "bankIfsc": {
+            "type": "string",
+            "example": "SBIN0001234"
+          }
+        }
+      },
+      "WorkingScheduleLineDto": {
+        "type": "object",
+        "properties": {
+          "dayOfWeek": {
+            "type": "number",
+            "example": 0
+          },
+          "startTime": {
+            "type": "string",
+            "example": "09:00"
+          },
+          "endTime": {
+            "type": "string",
+            "example": "18:00"
+          },
+          "breakMinutes": {
+            "type": "number",
+            "example": 60
+          }
+        },
+        "required": [
+          "dayOfWeek",
+          "startTime",
+          "endTime"
+        ]
+      },
+      "CreateWorkingScheduleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Standard 9-5"
+          },
+          "company": {
+            "type": "string",
+            "example": "My Company"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Asia/Kolkata"
+          },
+          "scheduleType": {
+            "type": "string",
+            "example": "Fixed"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkingScheduleLineDto"
+            }
+          },
+          "status": {
+            "type": "string",
+            "example": "Active"
+          }
+        },
+        "required": [
+          "name",
+          "lines"
+        ]
+      },
+      "UpdateWorkingScheduleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Standard 9-5"
+          },
+          "company": {
+            "type": "string",
+            "example": "My Company"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Asia/Kolkata"
+          },
+          "scheduleType": {
+            "type": "string",
+            "example": "Fixed"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkingScheduleLineDto"
+            }
+          },
+          "status": {
+            "type": "string",
+            "example": "Active"
+          }
+        }
+      },
+      "CreateContractDto": {
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "example": "uuid-of-employee"
+          },
+          "department": {
+            "type": "string",
+            "example": "Engineering"
+          },
+          "jobPosition": {
+            "type": "string",
+            "example": "Software Engineer"
+          },
+          "startDate": {
+            "type": "string",
+            "example": "2024-01-01"
+          },
+          "endDate": {
+            "type": "string",
+            "example": "2024-12-31"
+          },
+          "wage": {
+            "type": "number",
+            "example": 50000
+          },
+          "wageType": {
+            "type": "string",
+            "example": "Monthly"
+          },
+          "salaryStructureId": {
+            "type": "string",
+            "example": "uuid-of-salary-structure"
+          },
+          "workingScheduleId": {
+            "type": "string",
+            "example": "uuid-of-working-schedule"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "RUNNING",
+              "EXPIRED",
+              "CANCELLED"
+            ]
+          }
+        },
+        "required": [
+          "employeeId",
+          "startDate",
+          "wage"
+        ]
+      },
+      "UpdateContractDto": {
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "example": "uuid-of-employee"
+          },
+          "department": {
+            "type": "string",
+            "example": "Engineering"
+          },
+          "jobPosition": {
+            "type": "string",
+            "example": "Software Engineer"
+          },
+          "startDate": {
+            "type": "string",
+            "example": "2024-01-01"
+          },
+          "endDate": {
+            "type": "string",
+            "example": "2024-12-31"
+          },
+          "wage": {
+            "type": "number",
+            "example": 50000
+          },
+          "wageType": {
+            "type": "string",
+            "example": "Monthly"
+          },
+          "salaryStructureId": {
+            "type": "string",
+            "example": "uuid-of-salary-structure"
+          },
+          "workingScheduleId": {
+            "type": "string",
+            "example": "uuid-of-working-schedule"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "RUNNING",
+              "EXPIRED",
+              "CANCELLED"
+            ]
+          }
+        }
+      },
+      "CheckInDto": {
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "example": "uuid-of-employee"
+          }
+        }
+      },
+      "UpdateAttendanceDto": {
+        "type": "object",
+        "properties": {
+          "checkOut": {
+            "type": "string",
+            "example": "2024-01-01T18:00:00Z"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PRESENT",
+              "LATE",
+              "ABSENT",
+              "OVERTIME",
+              "MISSING_CHECKOUT",
+              "MANUALLY_EDITED"
+            ]
+          },
+          "notes": {
+            "type": "string",
+            "example": "Manual correction - system error"
+          }
+        }
+      },
+      "CreateTimeOffTypeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Annual Leave"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "DAYS",
+              "HOURS"
+            ]
+          },
+          "requiresAllocation": {
+            "type": "boolean"
+          },
+          "requiresApproval": {
+            "type": "boolean"
+          },
+          "affectsPayroll": {
+            "type": "boolean"
+          },
+          "colorHex": {
+            "type": "string",
+            "example": "#6366F1"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateTimeOffTypeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Annual Leave"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "DAYS",
+              "HOURS"
+            ]
+          },
+          "requiresAllocation": {
+            "type": "boolean"
+          },
+          "requiresApproval": {
+            "type": "boolean"
+          },
+          "affectsPayroll": {
+            "type": "boolean"
+          },
+          "colorHex": {
+            "type": "string",
+            "example": "#6366F1"
+          }
+        }
+      },
+      "CreateTimeOffAllocationDto": {
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "example": "uuid-of-employee"
+          },
+          "timeOffTypeId": {
+            "type": "string",
+            "example": "uuid-of-time-off-type"
+          },
+          "allocated": {
+            "type": "number",
+            "example": 20
+          },
+          "validFrom": {
+            "type": "string",
+            "example": "2024-01-01"
+          },
+          "validTo": {
+            "type": "string",
+            "example": "2024-12-31"
+          },
+          "status": {
+            "type": "string",
+            "example": "To Approve"
+          }
+        },
+        "required": [
+          "employeeId",
+          "timeOffTypeId",
+          "allocated",
+          "validFrom"
+        ]
+      },
+      "CreateTimeOffRequestDto": {
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "example": "uuid-of-employee"
+          },
+          "timeOffTypeId": {
+            "type": "string",
+            "example": "uuid-of-time-off-type"
+          },
+          "startDate": {
+            "type": "string",
+            "example": "2024-01-15"
+          },
+          "endDate": {
+            "type": "string",
+            "example": "2024-01-17"
+          },
+          "duration": {
+            "type": "number",
+            "example": 3
+          },
+          "reason": {
+            "type": "string",
+            "example": "Family vacation"
+          }
+        },
+        "required": [
+          "timeOffTypeId",
+          "startDate",
+          "endDate",
+          "duration"
+        ]
+      },
+      "CreateSalaryStructureDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Monthly Salary Structure"
+          },
+          "description": {
+            "type": "string",
+            "example": "Standard monthly salary structure for full-time employees"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateSalaryStructureDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Monthly Salary Structure"
+          },
+          "description": {
+            "type": "string",
+            "example": "Standard monthly salary structure for full-time employees"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateSalaryRuleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Basic Salary"
+          },
+          "code": {
+            "type": "string",
+            "example": "BASIC"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "BASIC",
+              "ALLOWANCE",
+              "GROSS",
+              "DEDUCTION",
+              "NET"
+            ]
+          },
+          "sequence": {
+            "type": "number",
+            "example": 1
+          },
+          "computationType": {
+            "type": "string",
+            "enum": [
+              "FIXED",
+              "PERCENTAGE",
+              "FORMULA",
+              "PYTHON_LIKE"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "example": 50000
+          },
+          "percentageOf": {
+            "type": "string",
+            "example": "BASIC"
+          },
+          "percentageValue": {
+            "type": "number",
+            "example": 12
+          },
+          "formula": {
+            "type": "string",
+            "example": "BASIC * 0.12"
+          },
+          "condition": {
+            "type": "string",
+            "example": "workedDays >= 20"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "code",
+          "category",
+          "sequence",
+          "computationType"
+        ]
+      },
+      "UpdateSalaryRuleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Basic Salary"
+          },
+          "code": {
+            "type": "string",
+            "example": "BASIC"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "BASIC",
+              "ALLOWANCE",
+              "GROSS",
+              "DEDUCTION",
+              "NET"
+            ]
+          },
+          "sequence": {
+            "type": "number",
+            "example": 1
+          },
+          "computationType": {
+            "type": "string",
+            "enum": [
+              "FIXED",
+              "PERCENTAGE",
+              "FORMULA",
+              "PYTHON_LIKE"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "example": 50000
+          },
+          "percentageOf": {
+            "type": "string",
+            "example": "BASIC"
+          },
+          "percentageValue": {
+            "type": "number",
+            "example": 12
+          },
+          "formula": {
+            "type": "string",
+            "example": "BASIC * 0.12"
+          },
+          "condition": {
+            "type": "string",
+            "example": "workedDays >= 20"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ValidateRuleDto": {
+        "type": "object",
+        "properties": {
+          "formula": {
+            "type": "string",
+            "example": "BASIC * 0.12"
+          },
+          "context": {
+            "type": "object",
+            "example": {
+              "BASIC": 50000,
+              "workedDays": 22,
+              "totalDays": 22
+            }
+          }
+        },
+        "required": [
+          "formula"
+        ]
+      },
+      "PreviewScopeDto": {
+        "type": "object",
+        "properties": {
+          "salaryStructureId": {
+            "type": "string",
+            "example": "uuid-of-salary-structure"
+          },
+          "periodStart": {
+            "type": "string",
+            "example": "2024-01-01"
+          },
+          "periodEnd": {
+            "type": "string",
+            "example": "2024-01-31"
+          },
+          "employeeType": {
+            "type": "string",
+            "example": "Full-time"
+          }
+        },
+        "required": [
+          "salaryStructureId",
+          "periodStart",
+          "periodEnd"
+        ]
+      },
+      "CreatePayrunDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "January 2024"
+          },
+          "salaryStructureId": {
+            "type": "string",
+            "example": "uuid-of-salary-structure"
+          },
+          "periodStart": {
+            "type": "string",
+            "example": "2024-01-01"
+          },
+          "periodEnd": {
+            "type": "string",
+            "example": "2024-01-31"
+          },
+          "employeeType": {
+            "type": "string",
+            "example": "Full-time"
+          },
+          "employeeIds": {
+            "example": [
+              "uuid1",
+              "uuid2",
+              "uuid3"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "salaryStructureId",
+          "periodStart",
+          "periodEnd",
+          "employeeIds"
+        ]
+      }
+    }
+  }
+}

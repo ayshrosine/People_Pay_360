@@ -1,21 +1,6 @@
-import { ValidationPipe, BadRequestException } from '@nestjs/common';
-import { ValidationError } from 'class-validator';
-
-export class CustomValidationPipe {
-  constructor() {
-    return new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      exceptionFactory: (errors: ValidationError[]) => {
-        const messages = errors.map(
-          error => `${Object.values(error.constraints || {}).join(', ')}`,
-        );
-        return new BadRequestException({
-          message: 'Validation failed',
-          errors: messages,
-        });
-      },
-    });
-  }
-}
+/**
+ * The global validation pipe is configured directly in `AppModule` under the
+ * `APP_PIPE` token from `@nestjs/core`. This module is kept only as a
+ * re-export so existing imports keep resolving.
+ */
+export { ValidationPipe } from '@nestjs/common';

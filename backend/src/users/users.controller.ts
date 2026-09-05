@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CheckAbility } from '../common/decorators/check-ability.decorator';
+import { RoleName } from '@prisma/client';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -15,8 +16,16 @@ export class UsersController {
   @Get()
   @Roles('ADMIN')
   @CheckAbility({ action: 'read', subject: 'User' })
-  async findAll(@Query('role') role?: string) {
-    return this.usersService.findAll(role);
+  async findAll(
+    @Query('role') role?: RoleName,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.usersService.findAll({
+      role,
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
   }
 
   @Get(':id')
