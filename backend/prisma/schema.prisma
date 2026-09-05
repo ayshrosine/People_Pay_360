@@ -1,6 +1,13 @@
 // schema.prisma
 generator client {
   provider = "prisma-client-js"
+  // Prisma ships a native query engine per libc/OpenSSL combination, and the
+  // one generated at build time must match the machine that runs the app.
+  // Zerops builds on Alpine (musl) but runs on Debian (glibc), so generating
+  // only for the build host produced "could not locate the Query Engine for
+  // runtime debian-openssl-3.0.x" at boot. Listing both makes `prisma generate`
+  // emit both engines, and `native` keeps local development working.
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {

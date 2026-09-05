@@ -90,9 +90,13 @@ bootstrap().catch((error: unknown) => {
   // console, not the Nest logger: the app may have failed before one exists.
   console.error('\nFATAL: the API could not start.\n');
   console.error(message);
-  console.error(
-    '\nCheck the required environment variables: DATABASE_URL, ' +
-      'JWT_ACCESS_SECRET, JWT_REFRESH_SECRET.\n',
-  );
+
+  // Only suggest the configuration when the failure actually looks like
+  // configuration. Printing this unconditionally sent a reader hunting for a
+  // missing DATABASE_URL when the real problem was a Prisma engine mismatch.
+  if (/environment configuration|DATABASE_URL|JWT_/i.test(message)) {
+    console.error('\nRequired: DATABASE_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET.\n');
+  }
+
   process.exit(1);
 });
