@@ -78,4 +78,21 @@ async function bootstrap() {
   logger.log(`OpenAPI JSON http://localhost:${port}/api/docs-json`);
 }
 
-void bootstrap();
+/**
+ * A failure here means the process never starts listening, which a load
+ * balancer reports as a 502 with no clue as to why. Print the reason plainly
+ * and exit non-zero, so the runtime log says what is actually wrong - almost
+ * always a missing DATABASE_URL or JWT secret, which `validate()` rejects on
+ * purpose rather than booting into a broken state.
+ */
+bootstrap().catch((error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  // console, not the Nest logger: the app may have failed before one exists.
+  console.error('\nFATAL: the API could not start.\n');
+  console.error(message);
+  console.error(
+    '\nCheck the required environment variables: DATABASE_URL, ' +
+      'JWT_ACCESS_SECRET, JWT_REFRESH_SECRET.\n',
+  );
+  process.exit(1);
+});
