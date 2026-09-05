@@ -31,6 +31,7 @@ npx prisma generate
 npx prisma db push        # creates the schema on Neon
 npm run prisma:seed       # base users, employees, salary structure
 npm run seed:demo         # representative data: staff, attendance, leave
+npm run seed:heads        # appoints a head for each department
 npm run start:dev
 ```
 
@@ -67,10 +68,14 @@ npm run dev
 |---|---|---|
 | `admin@peoplepay360.com` | Administrator | `password123` |
 | `hrpayroll@peoplepay360.com` | HR Payroll User | `password123` |
-| `john.doe@peoplepay360.com` | Employee | `password123` |
+| `john.doe@peoplepay360.com` | Employee **and head of Engineering** | `password123` |
 
 Roles change what you see: an administrator lands on the payroll dashboard, an
 employee lands on their own attendance and can only ever read their own records.
+
+Sign in as John Doe to see the department-head case: an ordinary `EMPLOYEE` who
+is still denied the dashboard, payruns and employee management, but who can
+approve leave for Engineering because `Department.headId` points at him.
 
 ---
 
@@ -85,6 +90,10 @@ employee lands on their own attendance and can only ever read their own records.
 | Working schedules | `/working-schedules` | Rostered days and hours, which drive pro-rating |
 | Payroll | `/payroll` | Payruns, payslips, salary structures and rules |
 | Users | `/admin/users` | Accounts and roles |
+
+Each department can have a **head**: an ordinary employee who may approve and
+refuse leave for their own department. Appoint one from any employee's page,
+under *Department leadership*.
 
 **Attendance sits inside Time & Attendance** rather than in a module of its own:
 leave and attendance are two answers to the same question — who was at work —
@@ -174,6 +183,12 @@ inline message instead of a generic toast.
 **Balances are never client-supplied.** Approving leave updates the request and
 debits the allocation inside one transaction; `remaining` is derived server-side.
 
+**Some authority is a relationship, not a role.** A department head is an
+ordinary `EMPLOYEE` whom `Department.headId` points at. They may approve and
+refuse leave for their own department — never for another, and never their own.
+The role guard defers via `@AllowDepartmentHead()`, and the handler then decides
+per record; the decorator grants nothing by itself.
+
 **Records with history are archived, not deleted.** Deleting an employee who has
 payslips, contracts or attendance returns `409 EMPLOYEE_HAS_RECORDS`.
 
@@ -207,8 +222,12 @@ cd frontend && npm run typecheck && npm run lint && npm run build
 End-to-end, against whatever the API is pointed at:
 
 ```bash
-cd backend && npm run test:api    # 50 checks: contract, RBAC, business rules
-cd backend && npm run test:ui     # browser walkthrough, 3 roles, every page
+cd backend && npm run test:all      # everything below, in order
+
+cd backend && npm run test:api      # 50 checks: contract, RBAC, business rules
+cd backend && npm run test:heads    # 13 checks: department-head authority
+cd backend && npm run test:ui       # browser walkthrough, 3 roles, every page
+cd backend && npm run test:head-ui  # the head's approve controls actually render
 ```
 
 The UI walkthrough fails on console errors, failed API calls and blank pages —

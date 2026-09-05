@@ -97,6 +97,29 @@ this role read *this* employee" are different questions. List queries for
 
 ---
 
+## 4a. Department heads
+
+A department head is **not a role**. Two people with the identical `EMPLOYEE`
+role differ only in whether `Department.headId` points at them, which the CASL
+role grid cannot express. So the authority is modelled as a relationship:
+
+- `@AllowDepartmentHead()` lets a head **past the role guard** — it grants
+  nothing on its own.
+- The handler must then call `DepartmentHeadService.assertLeads(...)` or
+  `TimeOffRequestsService.assertMayDecide(...)`. **A handler that carries the
+  decorator without that call is an open endpoint.**
+- A head decides leave for their own department only, and **never their own** —
+  that goes to HR.
+- A head must be an **active member** of the department they lead.
+- Listings are scoped the same way: a head sees their department's requests plus
+  their own, nobody else's.
+
+The frontend mirrors this with `canDecideLeaveFor(employeeId, departmentId)`
+from `useAuth()`, fed by `headedDepartments` on `/auth/me`. As always, that
+decides what renders, never what is permitted.
+
+---
+
 ## 5. Performance
 
 Neon is remote: **~290 ms per round-trip**. Query count, not query complexity,
@@ -144,10 +167,13 @@ the same question and payroll reads both.
 ## 8. Before you call it done
 
 ```bash
-cd backend  && npm run build && npm run lint && npm run test:api
+cd backend  && npm run build && npm run lint
 cd frontend && npm run typecheck && npm run lint && npm run build
-cd backend  && npm run test:ui     # needs both servers running
+cd backend  && npm run test:all    # needs both servers running
 ```
+
+`test:all` runs the API sweep, the department-head checks, the browser
+walkthrough, and the head's own UI check.
 
 The UI walkthrough fails on console errors, failed API calls, and blank pages —
 not just on crashes. Keep it at zero.

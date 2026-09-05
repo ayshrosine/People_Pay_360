@@ -18,18 +18,24 @@ listed below was exercised against the real infrastructure, not mocks.
 | Working schedules | Working | Rostered days drive payroll pro-rating |
 | Attendance | Working | Check-in, check-out, manual correction |
 | Time off | Working | Requests, approve/refuse, allocation debited in one transaction |
+| Department heads | Working | Head approves their own department's leave only |
 | Salary structures & rules | Working | Formula validation, sandbox escape blocked |
 | Payruns | Working | `DRAFT → COMPUTED → VALIDATED → PAID`, immutability enforced |
 | Payslips | Working | Rule-engine lines, explainer, PDF to R2 |
 | Dashboard | Working | 8 endpoints, live figures |
 | Admin users | Working | Account management |
 
-**Test results:** 50/50 API checks pass; 23/23 pages render clean across three
-roles with no console errors, failed requests, or hydration warnings.
+**Test results:** 50/50 API checks, 13/13 department-head checks, 23/23 pages
+rendering clean across three roles with no console errors, failed requests, or
+hydration warnings, and the head's approve controls verified in the browser.
 
 ```bash
-cd backend && npm run test:api    # API contract + RBAC sweep
-cd backend && npm run test:ui     # browser walkthrough, all roles, all pages
+cd backend && npm run test:all      # all four suites below
+
+cd backend && npm run test:api      # API contract + RBAC sweep
+cd backend && npm run test:heads    # department-head authority and its limits
+cd backend && npm run test:ui       # browser walkthrough, all roles, all pages
+cd backend && npm run test:head-ui  # the head's controls actually render
 ```
 
 ## Live data in the database
@@ -44,6 +50,7 @@ from the salary-rule engine:
 - Time-off allocations for everyone, requests in approved / pending / refused
 - 4 payruns: June, July and August 2026 `PAID`; September 2026 `COMPUTED`
   (the month in progress, so it is deliberately partial)
+- A head appointed for each of the 5 departments, each with a login
 
 ## What is deliberately not configured
 
@@ -67,6 +74,27 @@ Each degrades cleanly rather than crashing at boot.
    means attendance must be captured before a payrun is meaningful.
 3. **Email delivery is untested** because no valid Resend key was available.
 
+## Recent work
+
+**Interface rebuilt around a left rail.** A fixed sidebar names the module, and
+a top bar carries the breadcrumb, ⌘K command palette, theme toggle and account.
+Each page opens with a mono micro-label and a large display title. The sign-in
+screen sits on an animated triangular lattice that grows from the lower edge.
+
+**Attendance moved into Time & Attendance** (`/time-off/attendance`), alongside
+leave requests, allocations and leave types. `/attendance` redirects.
+
+**Department heads added.** `Department.headId` points at an employee who may
+approve and refuse leave for their department — never another's, and never
+their own. The authority is a relationship, not a role: the head stays an
+ordinary `EMPLOYEE`, still denied the dashboard, payruns and employee
+management. Appoint one from any employee's page.
+
+**Codebase tidied.** Test screenshots untracked and gitignored, throwaway
+scripts either removed or promoted to `backend/scripts` and `backend/test` with
+real names and npm scripts, editor-specific skill directories dropped, and the
+frontend README replaced (it was still Next.js boilerplate).
+
 ## Recent fixes
 
 Found and fixed while testing against real infrastructure:
@@ -86,6 +114,14 @@ Found and fixed while testing against real infrastructure:
 - **A self-service employee's payslip page requested payruns** and earned a 403.
 - **Duplicate departments** from two seeds using different ids for one name.
 - **The contract-overlap exclusion constraint** was applied to Neon and verified.
+- **Leave requests were not row-scoped.** Any employee could list every
+  colleague's leave. Listings are now scoped: HR sees all, a head sees their
+  department plus themselves, everyone else sees only their own.
+- **`Math.sin` in the login background caused a hydration mismatch.**
+  Transcendental functions are implementation-defined in ECMAScript, so Node and
+  the browser disagreed in the last bits. Replaced with an integer hash.
+- **`@IsUUID()` rejected valid ids.** Ids are opaque strings in this codebase —
+  seeded records use readable ones like `employee-4`.
 
 ## Security note
 
