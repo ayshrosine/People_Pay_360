@@ -118,8 +118,6 @@ model Employee {
   manager           Employee?           @relation("ManagerReports", fields: [managerId], references: [id])
   reports           Employee[]          @relation("ManagerReports")
   headOfDepartment  Department?         @relation("DepartmentHead")
-  workingScheduleId String?
-  workingSchedule   WorkingSchedule?    @relation(fields: [workingScheduleId], references: [id])
   status            EmployeeStatus      @default(ACTIVE)
   avatarUrl         String?
   phone             String?
@@ -145,7 +143,9 @@ model WorkingSchedule {
   totalWeeklyHours Float // auto-calculated from WorkingScheduleLine on save
   status           String                @default("Active")
   lines            WorkingScheduleLine[]
-  employees        Employee[]
+  // A schedule attaches to a contract, never directly to a person: it is a term
+  // of employment, and payroll has to know which one applied during the pay
+  // period rather than only which one applies today.
   contracts        Contract[]
 }
 
