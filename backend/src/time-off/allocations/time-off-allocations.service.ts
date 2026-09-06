@@ -1,13 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTimeOffAllocationDto } from './dto/create-time-off-allocation.dto';
+import { RecordScopeService } from '../../common/abilities/record-scope.service';
+import { RequestUser } from '../../common/abilities/ability.factory';
 
 @Injectable()
 export class TimeOffAllocationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly scope: RecordScopeService,
+  ) {}
 
-  async findAll(employeeId?: string) {
-    const where = employeeId ? { employeeId } : {};
+  /**
+   * A balance belongs to one person. An employee sees their own; a department
+   * head sees their department's, because they decide the leave drawn from it.
+   */
+  async findAll(employeeId?: string, user?: RequestUser | null) {
+    const where = (await this.scope.employeeFilter(user, employeeId)) ?? {};
     return this.prisma.timeOffAllocation.findMany({
       where,
       include: {
@@ -18,7 +27,7 @@ export class TimeOffAllocationsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, user?: RequestUser | null) {
     const allocation = await this.prisma.timeOffAllocation.findUnique({
       where: { id },
       include: {
@@ -28,8 +37,11 @@ export class TimeOffAllocationsService {
     });
 
     if (!allocation) {
-      throw new NotFoundException('Time off allocation not found');
+      throw new NotFoundException({ message: 'Time off allocation not found', code: 'NOT_FOUND' });
     }
+
+    // Scoping the list but not the record behind it moves the leak to a URL.
+    await this.scope.assertCanSee(user, allocation.employeeId);
 
     return allocation;
   }

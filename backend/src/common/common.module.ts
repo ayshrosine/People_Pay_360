@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { AbilityFactory } from './abilities/ability.factory';
 import { DepartmentHeadService } from './abilities/department-head.service';
+import { RecordScopeService } from './abilities/record-scope.service';
 
 /**
  * Exposes cross-cutting providers (currently the CASL ability factory) to every
@@ -11,7 +12,7 @@ import { DepartmentHeadService } from './abilities/department-head.service';
  */
 @Global()
 @Module({
-  providers: [AbilityFactory, DepartmentHeadService],
-  exports: [AbilityFactory, DepartmentHeadService],
+  providers: [AbilityFactory, DepartmentHeadService, RecordScopeService],
+  exports: [AbilityFactory, DepartmentHeadService, RecordScopeService],
 })
 export class CommonModule {}

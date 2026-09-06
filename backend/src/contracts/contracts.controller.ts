@@ -4,6 +4,8 @@ import { CreateContractDto } from './dto/create-contract.dto';
 import { UpdateContractDto } from './dto/update-contract.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CheckAbility } from '../common/decorators/check-ability.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { RequestUser } from '../common/abilities/ability.factory';
 
 @Controller('contracts')
 @UseGuards(JwtAuthGuard)
@@ -12,8 +14,8 @@ export class ContractsController {
 
   @Get()
   @CheckAbility({ action: 'read', subject: 'Contract' })
-  async findAll(@Query('employeeId') employeeId?: string) {
-    return this.contractsService.findAll(employeeId);
+  async findAll(@CurrentUser() user: RequestUser, @Query('employeeId') employeeId?: string) {
+    return this.contractsService.findAll(employeeId, user);
   }
 
   @Get('active')
@@ -24,8 +26,8 @@ export class ContractsController {
 
   @Get(':id')
   @CheckAbility({ action: 'read', subject: 'Contract' })
-  async findOne(@Param('id') id: string) {
-    return this.contractsService.findOne(id);
+  async findOne(@Param('id') id: string, @CurrentUser() user: RequestUser) {
+    return this.contractsService.findOne(id, user);
   }
 
   @Post()

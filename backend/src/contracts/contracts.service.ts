@@ -3,13 +3,23 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { UpdateContractDto } from './dto/update-contract.dto';
 import { ContractStatus } from '@prisma/client';
+import { RecordScopeService } from '../common/abilities/record-scope.service';
+import { RequestUser } from '../common/abilities/ability.factory';
 
 @Injectable()
 export class ContractsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly scope: RecordScopeService,
+  ) {}
 
-  async findAll(employeeId?: string) {
-    const where = employeeId ? { employeeId } : {};
+  /**
+   * A contract carries a wage, so who may see which rows matters as much as
+   * who may call the endpoint. An employee sees their own; a department head
+   * sees their department; HR sees everyone.
+   */
+  async findAll(employeeId?: string, user?: RequestUser | null) {
+    const where = (await this.scope.employeeFilter(user, employeeId)) ?? {};
     return this.prisma.contract.findMany({
       where,
       include: {
@@ -44,7 +54,7 @@ export class ContractsService {
     return contract;
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, user?: RequestUser | null) {
     const contract = await this.prisma.contract.findUnique({
       where: { id },
       include: {
@@ -57,6 +67,10 @@ export class ContractsService {
     if (!contract) {
       throw new NotFoundException({ message: 'Contract not found', code: 'NOT_FOUND' });
     }
+
+    // Scoping a list but not the record behind it just moves the leak to a
+    // guessable URL.
+    await this.scope.assertCanSee(user, contract.employeeId);
 
     return contract;
   }

@@ -28,8 +28,8 @@ export class TimeOffRequestsController {
 
   @Get(':id')
   @CheckAbility({ action: 'read', subject: 'TimeOffRequest' })
-  async findOne(@Param('id') id: string) {
-    return this.timeOffRequestsService.findOne(id);
+  async findOne(@Param('id') id: string, @CurrentUser() user: RequestUser) {
+    return this.timeOffRequestsService.findOne(id, user);
   }
 
   @Post()

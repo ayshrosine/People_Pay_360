@@ -3,6 +3,8 @@ import { TimeOffAllocationsService } from './time-off-allocations.service';
 import { CreateTimeOffAllocationDto } from './dto/create-time-off-allocation.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CheckAbility } from '../../common/decorators/check-ability.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RequestUser } from '../../common/abilities/ability.factory';
 
 @Controller('time-off/allocations')
 @UseGuards(JwtAuthGuard)
@@ -11,14 +13,14 @@ export class TimeOffAllocationsController {
 
   @Get()
   @CheckAbility({ action: 'read', subject: 'TimeOffAllocation' })
-  async findAll(@Query('employeeId') employeeId?: string) {
-    return this.timeOffAllocationsService.findAll(employeeId);
+  async findAll(@CurrentUser() user: RequestUser, @Query('employeeId') employeeId?: string) {
+    return this.timeOffAllocationsService.findAll(employeeId, user);
   }
 
   @Get(':id')
   @CheckAbility({ action: 'read', subject: 'TimeOffAllocation' })
-  async findOne(@Param('id') id: string) {
-    return this.timeOffAllocationsService.findOne(id);
+  async findOne(@Param('id') id: string, @CurrentUser() user: RequestUser) {
+    return this.timeOffAllocationsService.findOne(id, user);
   }
 
   @Post()

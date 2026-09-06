@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTimeOffRequestDto } from './dto/create-time-off-request.dto';
 import { TimeOffRequestStatus, Prisma } from '@prisma/client';
 import { DepartmentHeadService } from '../../common/abilities/department-head.service';
+import { RecordScopeService } from '../../common/abilities/record-scope.service';
 import { RequestUser } from '../../common/abilities/ability.factory';
 
 /** Roles that legitimately see every employee's leave. */
@@ -13,41 +14,22 @@ export class TimeOffRequestsService {
   constructor(
     private prisma: PrismaService,
     private readonly departmentHeads: DepartmentHeadService,
+    private readonly scope: RecordScopeService,
   ) {}
 
   /**
    * Restricts a listing to what the caller may actually see.
    *
-   * "May this role read leave requests" and "may this role read *this* leave
-   * request" are different questions. HR sees everything; a department head
-   * sees their own department plus their own requests; everyone else sees only
-   * their own.
+   * Delegates to RecordScopeService so leave requests, contracts, allocations,
+   * attendance and payslips all answer this the same way. Duplicating the rule
+   * per module is how contracts ended up unscoped.
    */
-  private async scopeFor(
-    user: RequestUser | undefined | null,
-  ): Promise<Prisma.TimeOffRequestWhereInput | null> {
-    if (user && HR_ROLES.includes(user.role)) return null;
-
-    const departmentIds = await this.departmentHeads.departmentsHeadedBy(user);
-    // A user with no employee record matches nothing rather than everything.
-    const own = user?.employeeId ?? '__no_employee__';
-
-    if (departmentIds.length > 0) {
-      return {
-        OR: [{ employeeId: own }, { employee: { departmentId: { in: departmentIds } } }],
-      };
-    }
-
-    return { employeeId: own };
-  }
-
   async findAll(employeeId?: string, status?: string, user?: RequestUser | null) {
     const filters: Prisma.TimeOffRequestWhereInput[] = [];
 
-    if (employeeId) filters.push({ employeeId });
     if (status) filters.push({ status: status as TimeOffRequestStatus });
 
-    const scope = await this.scopeFor(user);
+    const scope = await this.scope.employeeFilter(user, employeeId);
     if (scope) filters.push(scope);
 
     return this.prisma.timeOffRequest.findMany({
@@ -79,18 +61,21 @@ export class TimeOffRequestsService {
     await this.departmentHeads.assertLeads(user, request.employeeId);
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, user?: RequestUser | null) {
     const request = await this.prisma.timeOffRequest.findUnique({
       where: { id },
       include: {
-        employee: true,
+        employee: { include: { department: true } },
         timeOffType: true,
       },
     });
 
     if (!request) {
-      throw new NotFoundException('Time off request not found');
+      throw new NotFoundException({ message: 'Time off request not found', code: 'NOT_FOUND' });
     }
+
+    // Scoping the list but not the record behind it moves the leak to a URL.
+    await this.scope.assertCanSee(user, request.employeeId);
 
     return request;
   }
