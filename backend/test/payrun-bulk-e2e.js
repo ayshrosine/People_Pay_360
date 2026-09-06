@@ -70,7 +70,16 @@ const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, 
   console.log('\npayrun "' + name + '" with ' + scope.length + ' employee(s)\n');
 
   await req('POST', '/payroll/payruns/' + payrunId + '/compute', T);
-  let full = (await req('GET', '/payroll/payruns/' + payrunId, T)).json.data;
+
+  // Compute returns immediately and finishes in the background, so wait for
+  // the payrun to leave COMPUTING before asserting anything about its rows.
+  let full = null;
+  for (let attempt = 0; attempt < 90; attempt += 1) {
+    full = (await req('GET', '/payroll/payruns/' + payrunId, T)).json.data;
+    if (full.status !== 'COMPUTING' && full.status !== 'DRAFT') break;
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  console.log('  (computation settled to ' + full.status + ')');
   let slips = full.payslips || [];
   check('computed every selected employee', slips.length === scope.length, slips.length + ' payslip(s)');
 
