@@ -12,7 +12,12 @@ import { RuleEngineService } from '../rule-engine/rule-engine.service';
 
 export interface PayslipWarning {
   code: string;
-  severity: 'blocking' | 'info';
+  /**
+   * `blocking` stops the payrun being validated; `warning` is shown but does
+   * not, for results that are unusual yet legitimate — an employee on unpaid
+   * leave all month genuinely earns nothing.
+   */
+  severity: 'blocking' | 'warning' | 'info';
   message: string;
 }
 
@@ -101,6 +106,25 @@ export class PayslipComputationService {
     const grossAmount = this.deriveGross(context, lines, rules);
     const netAmount = this.deriveNet(context, lines, rules, grossAmount);
     const warnings = this.collectWarnings(employee, contract, payrun);
+
+    // A payslip worth nothing is the one result an operator will assume is a
+    // bug, so it has to say why. It is not blocking: an employee on unpaid
+    // leave for a whole month legitimately earns nothing.
+    if (workedDays <= 0) {
+      warnings.push({
+        code: 'NO_WORKED_DAYS',
+        severity: 'warning',
+        message:
+          `${employee.name} has no attendance or paid leave in this period, so their pay ` +
+          'computes to zero. Record their attendance, or remove them from this payrun.',
+      });
+    } else if (netAmount <= 0) {
+      warnings.push({
+        code: 'ZERO_NET_PAY',
+        severity: 'warning',
+        message: `${employee.name}'s net pay computes to zero. Check the salary rules for this structure.`,
+      });
+    }
 
     await this.prisma.$transaction([
       // A recompute must fully replace the previous snapshot, not append to it.
