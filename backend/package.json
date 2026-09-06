@@ -39,7 +39,8 @@
     "test:bulk": "node test/payrun-bulk-e2e.js",
     "test:bulk-ui": "node test/payrun-bulk-ui-e2e.js",
     "backfill:logins": "node scripts/backfill-employee-logins.js",
-    "test:wizard": "node test/payrun-wizard-e2e.js"
+    "test:wizard": "node test/payrun-wizard-e2e.js",
+    "seed:showcase": "node prisma/seed-showcase.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1127.0",

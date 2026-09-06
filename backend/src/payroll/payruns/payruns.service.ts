@@ -1,5 +1,6 @@
 import {
   Injectable,
+  OnModuleInit,
   ConflictException,
   NotFoundException,
   BadRequestException,
@@ -16,13 +17,35 @@ import {
 } from '../payslips/payslip-computation.service';
 
 @Injectable()
-export class PayrunsService {
+export class PayrunsService implements OnModuleInit {
   private readonly logger = new Logger(PayrunsService.name);
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly computation: PayslipComputationService,
   ) {}
+
+  /**
+   * Rescues payruns left mid-computation by a restart.
+   *
+   * Computation runs in the background, so a deploy or a crash between "set
+   * COMPUTING" and "set COMPUTED" strands the payrun in a state with no button
+   * that can move it. The payslips themselves are the truth, so the status is
+   * simply re-derived from them at boot.
+   */
+  async onModuleInit() {
+    const stuck = await this.prisma.payrun.findMany({
+      where: { status: PayrunStatus.COMPUTING },
+      select: { id: true, name: true },
+    });
+
+    for (const payrun of stuck) {
+      await this.syncPayrunStatus(payrun.id);
+      this.logger.warn(
+        `Payrun "${payrun.name}" was left COMPUTING by a restart; status re-derived from its payslips.`,
+      );
+    }
+  }
 
   /**
    * Step 1 of the wizard. Returns the employees who *would* be included, and

@@ -56,9 +56,14 @@ async function buildPayrun({ year, month, structureId, upTo }) {
   const end = monthEnd(year, month);
   const name = MONTHS[month] + ' ' + year;
 
-  const existing = await prisma.payrun.findFirst({ where: { periodStart: start } });
+  // Overlap, not equality: a payrun created through the API stores UTC
+  // midnight while `new Date(y, m, 1)` is local midnight, so comparing the two
+  // directly never matches and a second payrun gets created for the month.
+  const existing = await prisma.payrun.findFirst({
+    where: { periodStart: { lte: end }, periodEnd: { gte: start } },
+  });
   if (existing) {
-    console.log('  ' + name.padEnd(16) + 'already exists (' + existing.status + '), left alone');
+    console.log('  ' + name.padEnd(16) + 'already covered by "' + existing.name + '" (' + existing.status + '), left alone');
     return existing;
   }
 
@@ -149,17 +154,30 @@ async function main() {
   token = auth?.data?.accessToken;
   if (!token) throw new Error('could not sign in — is the API running?');
 
-  // ── Stray one-payslip payruns from earlier test runs ─────────────────────
-  const strays = await prisma.payrun.findMany({
-    include: { payslips: { select: { id: true } } },
-  });
-  const junk = strays.filter((r) => r.payslips.length <= 1);
-  for (const run of junk) {
-    await prisma.payslipLine.deleteMany({ where: { payslip: { payrunId: run.id } } });
-    await prisma.payslip.deleteMany({ where: { payrunId: run.id } });
-    await prisma.payrun.delete({ where: { id: run.id } });
+  // ── Duplicate payruns left behind by test runs ───────────────────────────
+  // Two payruns over one period would pay somebody twice. `create` refuses that
+  // now, but rows made before the guard existed are still here. For each month
+  // the fullest run is the real one; the rest are leftovers.
+  const all = await prisma.payrun.findMany({ include: { payslips: { select: { id: true } } } });
+  const byMonth = new Map();
+  for (const run of all) {
+    const key = run.periodStart.toISOString().slice(0, 7);
+    if (!byMonth.has(key)) byMonth.set(key, []);
+    byMonth.get(key).push(run);
   }
-  if (junk.length) console.log('cleanup        removed ' + junk.length + ' stray test payrun(s)\n');
+
+  let removed = 0;
+  for (const group of byMonth.values()) {
+    if (group.length < 2) continue;
+    group.sort((a, b) => b.payslips.length - a.payslips.length);
+    for (const run of group.slice(1)) {
+      await prisma.payslipLine.deleteMany({ where: { payslip: { payrunId: run.id } } });
+      await prisma.payslip.deleteMany({ where: { payrunId: run.id } });
+      await prisma.payrun.delete({ where: { id: run.id } });
+      removed += 1;
+    }
+  }
+  if (removed) console.log('cleanup        removed ' + removed + ' duplicate payrun(s)');
 
   // ── Leave types: there must be a genuinely PAID one ──────────────────────
   // `affectsPayroll: true` means the leave reduces pay. Both seeded types were
@@ -273,10 +291,12 @@ async function main() {
 
   console.log('\nPAYRUNS (through the real API, so figures come from the rule engine)');
   // Periods chosen to have attendance behind them, so the numbers are real.
+  // Months chosen so each is free and has attendance behind it, so the figures
+  // are real rather than a pro-rated zero.
+  await buildPayrun({ year: 2026, month: 1, structureId: structure.id, upTo: 'PARTIALLY_PAID' }); // February
   await buildPayrun({ year: 2026, month: 2, structureId: structure.id, upTo: 'DRAFT' });          // March
   await buildPayrun({ year: 2026, month: 3, structureId: structure.id, upTo: 'COMPUTED' });       // April
   await buildPayrun({ year: 2026, month: 4, structureId: structure.id, upTo: 'VALIDATED' });      // May
-  await buildPayrun({ year: 2026, month: 5, structureId: structure.id, upTo: 'PARTIALLY_PAID' }); // June
 
   // ── Summary ─────────────────────────────────────────────────────────────
   const runs = await prisma.payrun.findMany({

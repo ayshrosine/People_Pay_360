@@ -139,14 +139,15 @@ async function main() {
     },
   });
 
-  // Attendance far enough back to cover every historical payrun period,
-  // otherwise those months compute as zero worked days and pay nothing.
+  // Attendance far enough back to cover every historical payrun period —
+  // including the earliest showcase months — otherwise those periods compute
+  // as zero worked days and a demo payrun pays nothing.
   const allEmployees = await prisma.employee.findMany({ where: { status: 'ACTIVE' } });
   await prisma.attendance.deleteMany({ where: { notes: 'seed:demo' } });
 
   const attendance = [];
   const today = new Date();
-  for (let back = 1; back <= 190; back += 1) {
+  for (let back = 1; back <= 260; back += 1) {
     const day = new Date(today);
     day.setDate(day.getDate() - back);
     const dow = day.getDay();
@@ -184,7 +185,7 @@ async function main() {
     }
   }
   await prisma.attendance.createMany({ data: attendance });
-  console.log('attendance         ' + attendance.length + ' records over the last ~6 months');
+  console.log('attendance         ' + attendance.length + ' records over the last ~9 months');
 
   // Time off: allocations for everyone, requests in every state.
   const types = await prisma.timeOffType.findMany();
