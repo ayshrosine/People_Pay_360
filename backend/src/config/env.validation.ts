@@ -40,6 +40,13 @@ export class EnvironmentVariables {
   @IsOptional() @IsString() SENTRY_ENVIRONMENT?: string;
   @IsOptional() @IsString() SENTRY_TRACES_SAMPLE_RATE?: string;
 
+  /**
+   * Password given to the account created alongside a new employee. Outside
+   * production it falls back to a well-known value; in production, leaving it
+   * unset means no login is created rather than a guessable one.
+   */
+  @IsOptional() @IsString() EMPLOYEE_DEFAULT_PASSWORD?: string;
+
   @IsOptional() @IsString() CORS_ORIGIN?: string;
   @IsOptional() @IsString() PORT?: string;
   @IsOptional() @IsString() NODE_ENV?: string;

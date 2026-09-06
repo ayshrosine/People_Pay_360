@@ -45,7 +45,7 @@ import {
 } from '@/hooks/use-resources';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { normaliseError } from '@/lib/api/client';
-import type { Employee } from '@/lib/api/types';
+import type { Employee, ProvisionedLogin } from '@/lib/api/types';
 
 const STATUSES: Employee['status'][] = ['ACTIVE', 'ON_LEAVE', 'INACTIVE', 'TERMINATED'];
 const TYPES = ['Full-time', 'Part-time', 'Contract', 'Intern'];
@@ -137,6 +137,7 @@ function EmployeeForm() {
   );
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [banner, setBanner] = React.useState<string | null>(null);
+  const [newLogin, setNewLogin] = React.useState<ProvisionedLogin | null>(null);
 
   const editable = can(isNew ? 'create' : 'update', 'Employee');
 
@@ -166,6 +167,12 @@ function EmployeeForm() {
 
     try {
       const saved = await save.mutateAsync(payload);
+
+      // Shown once, here: this is the only moment the password exists in
+      // readable form, and the person who created the record is the one who
+      // has to pass it on.
+      if (saved?.login?.created) setNewLogin(saved.login);
+
       if (isNew && saved?.id) router.replace(`/employees/${saved.id}`);
     } catch (error) {
       const normalised = normaliseError(error);
@@ -379,6 +386,28 @@ function EmployeeForm() {
                   employeeName={form.name}
                   departmentId={form.departmentId || null}
                 />
+              </div>
+            ) : null}
+
+            {newLogin ? (
+              <div
+                role="status"
+                className="mt-4 rounded-[var(--radius-card)] border border-[var(--status-success)] bg-[var(--status-success-bg)] p-3"
+              >
+                <p className="text-[13px] font-medium text-[var(--status-success)]">
+                  Sign-in created for this employee
+                </p>
+                <dl className="mt-2 grid gap-1 text-[12.5px] sm:grid-cols-[auto_1fr] sm:gap-x-4">
+                  <dt className="text-[var(--text-tertiary)]">Email</dt>
+                  <dd className="ledger-num text-[var(--text-primary)]">{newLogin.email}</dd>
+                  <dt className="text-[var(--text-tertiary)]">Password</dt>
+                  <dd className="ledger-num text-[var(--text-primary)]">
+                    {newLogin.temporaryPassword}
+                  </dd>
+                </dl>
+                <p className="mt-2 text-[11.5px] leading-relaxed text-[var(--text-tertiary)]">
+                  {newLogin.note} You will not see this password again.
+                </p>
               </div>
             ) : null}
 

@@ -1,11 +1,14 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
-import { EmployeeStatus, Prisma } from '@prisma/client';
+import { EmployeeStatus, Prisma, RoleName } from '@prisma/client';
+import * as argon2 from 'argon2';
 
 @Injectable()
 export class EmployeesService {
+  private readonly logger = new Logger(EmployeesService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async findAll(params: {
@@ -135,13 +138,80 @@ export class EmployeesService {
       });
     }
 
-    return this.prisma.employee.create({
+    const employee = await this.prisma.employee.create({
       data: createEmployeeDto,
       include: {
         department: true,
         manager: true,
       },
     });
+
+    const login = await this.provisionLogin(employee.id, employee.workEmail);
+
+    // The credentials ride back on the response so whoever created the record
+    // can hand them over immediately. An employee with no way to sign in is
+    // half a record, and hunting for a separate "create user" screen is the
+    // step everyone forgets.
+    return { ...employee, login };
+  }
+
+  /**
+   * Gives a new employee an account they can actually sign in with.
+   *
+   * The password comes from `EMPLOYEE_DEFAULT_PASSWORD`. Outside production it
+   * falls back to a well-known value so a fresh environment is usable straight
+   * away; in production an unset variable is refused rather than quietly
+   * creating accounts everyone can guess.
+   */
+  private async provisionLogin(employeeId: string, email: string) {
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+
+    if (existing) {
+      // Someone already signs in with this address; link it rather than
+      // creating a second account or overwriting their password.
+      if (!existing.employeeId) {
+        await this.prisma.user.update({
+          where: { id: existing.id },
+          data: { employeeId },
+        });
+      }
+      return { email, created: false, note: 'An account with this email already existed.' };
+    }
+
+    const configured = process.env.EMPLOYEE_DEFAULT_PASSWORD;
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (!configured && isProduction) {
+      this.logger.warn(
+        `No EMPLOYEE_DEFAULT_PASSWORD set, so no login was created for ${email}. ` +
+          'Set it, or create the account explicitly under Users.',
+      );
+      return {
+        email,
+        created: false,
+        note: 'No login created: set EMPLOYEE_DEFAULT_PASSWORD, or add the account under Users.',
+      };
+    }
+
+    const password = configured ?? 'password123';
+
+    await this.prisma.user.create({
+      data: {
+        email,
+        passwordHash: await argon2.hash(password),
+        role: RoleName.EMPLOYEE,
+        employeeId,
+        isActive: true,
+      },
+    });
+
+    return {
+      email,
+      created: true,
+      // Returned once, on creation only — never on a later read of the record.
+      temporaryPassword: password,
+      note: 'Share these credentials and ask them to change the password.',
+    };
   }
 
   async update(id: string, updateEmployeeDto: UpdateEmployeeDto) {

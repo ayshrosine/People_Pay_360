@@ -37,7 +37,8 @@
     "test:scope": "node test/scope-audit.js",
     "test:employee-ui": "node test/employee-ui-e2e.js",
     "test:bulk": "node test/payrun-bulk-e2e.js",
-    "test:bulk-ui": "node test/payrun-bulk-ui-e2e.js"
+    "test:bulk-ui": "node test/payrun-bulk-ui-e2e.js",
+    "backfill:logins": "node scripts/backfill-employee-logins.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1127.0",

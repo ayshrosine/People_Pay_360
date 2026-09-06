@@ -128,6 +128,17 @@ export interface WorkingSchedule {
   _count?: { contracts: number };
 }
 
+/**
+ * The account provisioned alongside a new employee. Present only on the
+ * response to creating one — never on a later read of the record.
+ */
+export interface ProvisionedLogin {
+  email: string;
+  created: boolean;
+  temporaryPassword?: string;
+  note?: string;
+}
+
 export interface Employee {
   id: string;
   name: string;
@@ -143,6 +154,7 @@ export interface Employee {
   employeeType: string | null;
   bankAccount: string | null;
   bankIfsc: string | null;
+  login?: ProvisionedLogin;
   createdAt: string;
   updatedAt: string;
 }
