@@ -99,7 +99,11 @@ async function settle(page) {
   await page.goto(APP + '/time-off/allocations', { waitUntil: 'networkidle2' });
   await settle(page);
   const allocNames = await page.evaluate(() =>
-    Array.from(document.querySelectorAll('tbody tr')).map((r) => (r.innerText || '').split('\t')[0].trim()),
+    Array.from(document.querySelectorAll('tbody tr'))
+      // An empty table renders one row holding the empty-state message. It has
+      // a single spanning cell, and is not another person's record.
+      .filter((r) => r.querySelectorAll('td').length > 1)
+      .map((r) => (r.innerText || '').split('\t')[0].trim()),
   );
   const foreignAlloc = allocNames.filter((n) => n && !n.includes(plain.name.split(' ')[0]));
   await page.screenshot({ path: path.join(SHOTS, 'EMPLOYEE_allocations.png') });
@@ -110,7 +114,9 @@ async function settle(page) {
   await page.goto(APP + '/contracts', { waitUntil: 'networkidle2' });
   await settle(page);
   const contractRows = await page.evaluate(() =>
-    Array.from(document.querySelectorAll('tbody tr')).map((r) => (r.innerText || '').split('\t')[0].trim()),
+    Array.from(document.querySelectorAll('tbody tr'))
+      .filter((r) => r.querySelectorAll('td').length > 1)
+      .map((r) => (r.innerText || '').split('\t')[0].trim()),
   );
   const foreignContracts = contractRows.filter((n) => n && !n.includes(plain.name.split(' ')[0]));
   await page.screenshot({ path: path.join(SHOTS, 'EMPLOYEE_contracts.png') });
