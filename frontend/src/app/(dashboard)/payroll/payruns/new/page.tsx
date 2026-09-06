@@ -36,6 +36,17 @@ export default function NewPayrunPage() {
   const [step, setStep] = React.useState<1 | 2>(1);
   const [typedName, setTypedName] = React.useState('');
   const [salaryStructureId, setSalaryStructureId] = React.useState('');
+
+  // Default to the only sensible choice rather than starting on a blank select
+  // that silently disables Continue. Deriving during render (rather than
+  // syncing in an effect) means the default appears the moment the list loads
+  // and never fights a choice the user has already made.
+  const activeStructures = React.useMemo(
+    () => (structures.data?.data ?? []).filter((structure) => structure.isActive),
+    [structures.data],
+  );
+  const chosenStructureId =
+    salaryStructureId || (activeStructures.length > 0 ? activeStructures[0].id : '');
   const [periodStart, setPeriodStart] = React.useState(bounds.start);
   const [periodEnd, setPeriodEnd] = React.useState(bounds.end);
   const [employeeType, setEmployeeType] = React.useState('');
@@ -66,7 +77,7 @@ export default function NewPayrunPage() {
 
     try {
       const result = await preview.mutateAsync({
-        salaryStructureId,
+        salaryStructureId: chosenStructureId,
         periodStart,
         periodEnd,
         employeeType: employeeType || undefined,
@@ -86,7 +97,7 @@ export default function NewPayrunPage() {
     try {
       const payrun = await create.mutateAsync({
         name: name.trim(),
-        salaryStructureId,
+        salaryStructureId: chosenStructureId,
         periodStart,
         periodEnd,
         employeeType: employeeType || undefined,
@@ -122,7 +133,7 @@ export default function NewPayrunPage() {
   const mismatched = candidates.filter(
     (candidate) =>
       candidate.contractSalaryStructureId &&
-      candidate.contractSalaryStructureId !== salaryStructureId &&
+      candidate.contractSalaryStructureId !== chosenStructureId &&
       selected.has(candidate.id),
   );
 
@@ -167,17 +178,17 @@ export default function NewPayrunPage() {
               <Select
                 id="structure"
                 required
-                value={salaryStructureId}
+                value={chosenStructureId}
                 onChange={(event) => setSalaryStructureId(event.target.value)}
               >
-                <option value="">Select a structure</option>
-                {structures.data?.data
-                  .filter((structure) => structure.isActive)
-                  .map((structure) => (
-                    <option key={structure.id} value={structure.id}>
-                      {structure.name}
-                    </option>
-                  ))}
+                {activeStructures.length === 0 ? (
+                  <option value="">No active salary structure</option>
+                ) : null}
+                {activeStructures.map((structure) => (
+                  <option key={structure.id} value={structure.id}>
+                    {structure.name}
+                  </option>
+                ))}
               </Select>
             </Field>
 
@@ -233,7 +244,16 @@ export default function NewPayrunPage() {
                 type="submit"
                 variant="primary"
                 loading={preview.isPending}
-                disabled={!salaryStructureId || !name.trim()}
+                disabled={!chosenStructureId || !name.trim()}
+                // A greyed-out button with no explanation is the single most
+                // common way a form dead-ends.
+                title={
+                  !chosenStructureId
+                    ? 'Create an active salary structure first — its rules are what compute the payslips.'
+                    : !name.trim()
+                      ? 'Give this payrun a name.'
+                      : undefined
+                }
               >
                 Continue
                 <ArrowRight className="h-3.5 w-3.5" aria-hidden />

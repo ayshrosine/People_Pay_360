@@ -49,7 +49,10 @@ async function settle(page) {
 
   const { PrismaClient } = require('@prisma/client');
   const prisma = new PrismaClient();
-  const stale = await prisma.payrun.findMany({ where: { name: NAME }, select: { id: true } });
+  const stale = await prisma.payrun.findMany({
+    where: { periodStart: new Date(PERIOD_START + 'T00:00:00.000Z') },
+    select: { id: true },
+  });
   if (stale.length) {
     const ids = stale.map((r) => r.id);
     await prisma.payslipLine.deleteMany({ where: { payslip: { payrunId: { in: ids } } } });
@@ -138,10 +141,16 @@ async function settle(page) {
   const onDetail = /\/payroll\/payruns\/[0-9a-f-]{8,}/.test(page.url());
   check('creating navigates to the new payrun', onDetail, page.url().replace(APP, ''));
 
-  const created = await prisma.payrun.findFirst({
-    where: { name: NAME },
-    include: { payslips: { select: { id: true, status: true } } },
-  });
+  // Identify it by the id in the URL: the wizard derives the name from the
+  // period, so matching on a name the test typed is fragile.
+  const createdId = (page.url().match(/\/payroll\/payruns\/([0-9a-f-]{8,})/) || [])[1];
+
+  const created = createdId
+    ? await prisma.payrun.findUnique({
+        where: { id: createdId },
+        include: { payslips: { select: { id: true, status: true } } },
+      })
+    : null;
   check('the payrun exists in the database', Boolean(created), created ? created.status : 'missing');
   check('only the selected employees are in it', (created?.payslips.length ?? 0) === step2.rows,
     (created?.payslips.length ?? 0) + ' payslip(s) for ' + step2.rows + ' selected');
@@ -164,10 +173,12 @@ async function settle(page) {
   await new Promise((r) => setTimeout(r, 3000));
   await page.screenshot({ path: path.join(SHOTS, 'WIZARD_computed.png') });
 
-  const after = await prisma.payrun.findFirst({
-    where: { name: NAME },
-    include: { payslips: { include: { lines: true } } },
-  });
+  const after = createdId
+    ? await prisma.payrun.findUnique({
+        where: { id: createdId },
+        include: { payslips: { include: { lines: true } } },
+      })
+    : null;
 
   check('the payrun reaches COMPUTED', after?.status === 'COMPUTED', after?.status);
   const withLines = (after?.payslips ?? []).filter((p) => p.lines.length > 0).length;
