@@ -1880,6 +1880,138 @@
         ]
       }
     },
+    "/api/v1/payroll/payruns/{id}/payslips/remove": {
+      "post": {
+        "operationId": "PayrunsController_removeSelected",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayslipSelectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      }
+    },
+    "/api/v1/payroll/payruns/{id}/payslips/validate": {
+      "post": {
+        "operationId": "PayrunsController_validateSelected",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayslipSelectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      }
+    },
+    "/api/v1/payroll/payruns/{id}/payslips/mark-paid": {
+      "post": {
+        "operationId": "PayrunsController_markSelectedPaid",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayslipSelectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      }
+    },
+    "/api/v1/payroll/payruns/{id}/payslips/send": {
+      "post": {
+        "operationId": "PayrunsController_sendSelected",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayslipSelectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payruns"
+        ]
+      }
+    },
     "/api/v1/payroll/payslips": {
       "get": {
         "operationId": "PayslipsController_findAll",
@@ -3216,6 +3348,24 @@
           "periodStart",
           "periodEnd",
           "employeeIds"
+        ]
+      },
+      "PayslipSelectionDto": {
+        "type": "object",
+        "properties": {
+          "payslipIds": {
+            "example": [
+              "payslip-uuid-1",
+              "payslip-uuid-2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "payslipIds"
         ]
       }
     }

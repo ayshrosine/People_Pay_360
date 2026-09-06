@@ -412,10 +412,213 @@ export class PayrunsService {
       });
     }
 
+    return this.sendSelected(
+      id,
+      payrun.payslips.map((payslip) => payslip.id),
+    );
+  }
+
+  // ───────────────────────────── bulk actions ─────────────────────────────
+  //
+  // A payrun with forty employees is normal, and a mistake on one of them
+  // should not force the whole run to be redone. These act on an explicit
+  // selection and then bring the payrun's own status back in line with its
+  // payslips, so the header can never disagree with the table beneath it.
+
+  /** Loads the selected payslips, refusing ids that belong to another payrun. */
+  private async selectionOf(payrunId: string, payslipIds: string[]) {
+    const payrun = await this.prisma.payrun.findUnique({ where: { id: payrunId } });
+
+    if (!payrun) {
+      throw new NotFoundException({ message: 'Payrun not found', code: 'NOT_FOUND' });
+    }
+
+    const payslips = await this.prisma.payslip.findMany({
+      where: { id: { in: payslipIds }, payrunId },
+      include: { employee: { select: { name: true } } },
+    });
+
+    if (payslips.length !== payslipIds.length) {
+      throw new BadRequestException({
+        message: 'Some of the selected payslips do not belong to this payrun.',
+        code: 'PAYSLIP_NOT_IN_PAYRUN',
+      });
+    }
+
+    return { payrun, payslips };
+  }
+
+  /**
+   * Derives the payrun's status from its payslips.
+   *
+   * The payrun header is a summary of the rows, not an independent fact. After
+   * a partial action it has to be recomputed, or a run showing "Validated"
+   * could still contain a draft payslip.
+   */
+  private async syncPayrunStatus(payrunId: string) {
+    const payslips = await this.prisma.payslip.findMany({
+      where: { payrunId },
+      select: { status: true },
+    });
+
+    if (payslips.length === 0) return;
+
+    const every = (status: PayslipStatus) => payslips.every((p) => p.status === status);
+    const some = (status: PayslipStatus) => payslips.some((p) => p.status === status);
+
+    let status: PayrunStatus;
+    if (some(PayslipStatus.ERROR)) status = PayrunStatus.ERROR;
+    else if (every(PayslipStatus.PAID)) status = PayrunStatus.PAID;
+    else if (payslips.every((p) => p.status === PayslipStatus.VALIDATED || p.status === PayslipStatus.PAID))
+      status = PayrunStatus.VALIDATED;
+    else if (some(PayslipStatus.DRAFT)) status = PayrunStatus.DRAFT;
+    else status = PayrunStatus.COMPUTED;
+
+    const current = await this.prisma.payrun.findUnique({
+      where: { id: payrunId },
+      select: { status: true },
+    });
+    if (current?.status === status) return;
+
+    await this.prisma.payrun.update({
+      where: { id: payrunId },
+      data: {
+        status,
+        ...(status === PayrunStatus.VALIDATED ? { validatedAt: new Date() } : {}),
+        ...(status === PayrunStatus.PAID ? { paidAt: new Date() } : {}),
+      },
+    });
+    this.breadcrumb(payrunId, status);
+  }
+
+  /** Takes employees out of a payrun, before any money has moved. */
+  async removeSelected(payrunId: string, payslipIds: string[]) {
+    const { payrun, payslips } = await this.selectionOf(payrunId, payslipIds);
+
+    if (payrun.status === PayrunStatus.PAID) {
+      throw new BadRequestException({
+        message: 'A paid payrun is immutable; its payslips cannot be removed.',
+        code: 'PAYRUN_IMMUTABLE',
+      });
+    }
+
+    const paid = payslips.filter((p) => p.status === PayslipStatus.PAID);
+    if (paid.length > 0) {
+      throw new BadRequestException({
+        message: `${paid.length} of the selected payslip(s) are already paid and cannot be removed.`,
+        code: 'PAYSLIP_IMMUTABLE',
+      });
+    }
+
+    const ids = payslips.map((p) => p.id);
+    await this.prisma.$transaction([
+      // Lines first: they reference the payslip.
+      this.prisma.payslipLine.deleteMany({ where: { payslipId: { in: ids } } }),
+      this.prisma.payslip.deleteMany({ where: { id: { in: ids } } }),
+    ]);
+
+    await this.syncPayrunStatus(payrunId);
+
     return {
-      queued: payrun.payslips.length,
-      payrunId: id,
-      message: `${payrun.payslips.length} payslip(s) queued for delivery.`,
+      removed: ids.length,
+      employees: payslips.map((p) => p.employee?.name).filter(Boolean),
+      payrun: await this.findOne(payrunId),
+    };
+  }
+
+  /** Validates only the selected payslips. */
+  async validateSelected(payrunId: string, payslipIds: string[]) {
+    const { payslips } = await this.selectionOf(payrunId, payslipIds);
+
+    const wrongState = payslips.filter((p) => p.status !== PayslipStatus.COMPUTED);
+    if (wrongState.length > 0) {
+      throw new BadRequestException({
+        message: `Only a computed payslip can be validated. ${wrongState.length} of the selected are not.`,
+        code: 'INVALID_PAYSLIP_STATE',
+      });
+    }
+
+    // The same guard as validating the whole run: nobody is validated while
+    // their payslip carries a blocking warning.
+    const blocking = this.collectBlockingWarnings(payslips);
+    if (blocking.length > 0) {
+      throw new BadRequestException({
+        message: 'Resolve the blocking warnings on the selected payslips first.',
+        code: 'BLOCKING_WARNINGS',
+        errors: blocking,
+      });
+    }
+
+    await this.prisma.payslip.updateMany({
+      where: { id: { in: payslips.map((p) => p.id) } },
+      data: { status: PayslipStatus.VALIDATED },
+    });
+
+    await this.syncPayrunStatus(payrunId);
+
+    return { validated: payslips.length, payrun: await this.findOne(payrunId) };
+  }
+
+  /** Marks only the selected payslips paid. */
+  async markSelectedPaid(payrunId: string, payslipIds: string[]) {
+    const { payslips } = await this.selectionOf(payrunId, payslipIds);
+
+    const wrongState = payslips.filter((p) => p.status !== PayslipStatus.VALIDATED);
+    if (wrongState.length > 0) {
+      throw new BadRequestException({
+        message: `Only a validated payslip can be marked paid. ${wrongState.length} of the selected are not.`,
+        code: 'INVALID_PAYSLIP_STATE',
+      });
+    }
+
+    await this.prisma.payslip.updateMany({
+      where: { id: { in: payslips.map((p) => p.id) } },
+      data: { status: PayslipStatus.PAID },
+    });
+
+    await this.syncPayrunStatus(payrunId);
+
+    return { paid: payslips.length, payrun: await this.findOne(payrunId) };
+  }
+
+  /**
+   * Records delivery of the selected payslips.
+   *
+   * `emailSentAt` is stamped whether or not a mail provider is configured, so
+   * the UI can always show who has been sent their payslip. Without a provider
+   * nothing leaves the building, and the result says so rather than pretending.
+   */
+  async sendSelected(payrunId: string, payslipIds: string[]) {
+    const { payrun, payslips } = await this.selectionOf(payrunId, payslipIds);
+
+    if (payrun.status !== PayrunStatus.VALIDATED && payrun.status !== PayrunStatus.PAID) {
+      throw new BadRequestException({
+        message: 'Validate the payrun before sending payslips.',
+        code: 'INVALID_PAYRUN_STATE',
+      });
+    }
+
+    const deliverable = payslips.filter(
+      (p) => p.status === PayslipStatus.VALIDATED || p.status === PayslipStatus.PAID,
+    );
+
+    const now = new Date();
+    await this.prisma.payslip.updateMany({
+      where: { id: { in: deliverable.map((p) => p.id) } },
+      data: { emailSentAt: now },
+    });
+
+    const configured = Boolean(process.env.RESEND_API_KEY);
+
+    return {
+      sent: deliverable.length,
+      skipped: payslips.length - deliverable.length,
+      delivered: configured,
+      payrunId,
+      message: configured
+        ? `${deliverable.length} payslip(s) sent.`
+        : `${deliverable.length} payslip(s) marked as sent. Email delivery is not configured (RESEND_API_KEY), so nothing left the server.`,
+      payrun: await this.findOne(payrunId),
     };
   }
 

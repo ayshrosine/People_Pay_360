@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, HttpCode, 
 import { PayrunsService } from './payruns.service';
 import { CreatePayrunDto } from './dto/create-payrun.dto';
 import { PreviewScopeDto } from './dto/preview-scope.dto';
+import { PayslipSelectionDto } from './dto/payslip-selection.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CheckAbility } from '../../common/decorators/check-ability.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -61,5 +62,37 @@ export class PayrunsController {
   @HttpCode(HttpStatus.ACCEPTED)
   async sendPayslips(@Param('id') id: string) {
     return this.payrunsService.sendPayslips(id);
+  }
+
+  // ── Bulk actions on a selection ────────────────────────────────────────
+  // A payrun of forty people should not have to be redone because one of them
+  // is wrong, so each of these takes an explicit list of payslips.
+
+  @Post(':id/payslips/remove')
+  @CheckAbility({ action: 'update', subject: 'Payrun' })
+  @HttpCode(HttpStatus.OK)
+  async removeSelected(@Param('id') id: string, @Body() dto: PayslipSelectionDto) {
+    return this.payrunsService.removeSelected(id, dto.payslipIds);
+  }
+
+  @Post(':id/payslips/validate')
+  @CheckAbility({ action: 'update', subject: 'Payrun' })
+  @HttpCode(HttpStatus.OK)
+  async validateSelected(@Param('id') id: string, @Body() dto: PayslipSelectionDto) {
+    return this.payrunsService.validateSelected(id, dto.payslipIds);
+  }
+
+  @Post(':id/payslips/mark-paid')
+  @CheckAbility({ action: 'update', subject: 'Payrun' })
+  @HttpCode(HttpStatus.OK)
+  async markSelectedPaid(@Param('id') id: string, @Body() dto: PayslipSelectionDto) {
+    return this.payrunsService.markSelectedPaid(id, dto.payslipIds);
+  }
+
+  @Post(':id/payslips/send')
+  @CheckAbility({ action: 'update', subject: 'Payrun' })
+  @HttpCode(HttpStatus.OK)
+  async sendSelected(@Param('id') id: string, @Body() dto: PayslipSelectionDto) {
+    return this.payrunsService.sendSelected(id, dto.payslipIds);
   }
 }
