@@ -7,8 +7,9 @@ import {
   type UseQueryOptions,
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { deleteData, getData, getList, normaliseError, patchData, postData } from '@/lib/api/client';
+import { api, deleteData, getData, getList, normaliseError, patchData, postData } from '@/lib/api/client';
 import type {
+  ApiEnvelope,
   AppUser,
   Attendance,
   AttendanceOverview,
@@ -25,6 +26,8 @@ import type {
   SalaryRule,
   SalaryStructure,
   ScopeCandidate,
+  ScopePreview,
+  ExcludedCandidate,
   TimeOffAllocation,
   TimeOffOverview,
   TimeOffRequest,
@@ -503,14 +506,30 @@ export function usePayrun(id: string | undefined, options: QueryOpts<Payrun> = {
   });
 }
 
+/**
+ * Who can be paid for a period — and who cannot, with the reason.
+ *
+ * Reads the whole envelope rather than just `data`, because the exclusions live
+ * in `meta`: an employee who already has a payslip for the period must not be
+ * offered, but the operator still needs to know they exist.
+ */
 export function usePreviewScope() {
   return useApiMutation(
-    (payload: {
+    async (payload: {
       salaryStructureId: string;
       periodStart: string;
       periodEnd: string;
       employeeType?: string;
-    }) => postData<ScopeCandidate[]>('/payroll/payruns/preview-scope', payload),
+    }): Promise<ScopePreview> => {
+      const response = await api.post<
+        ApiEnvelope<ScopeCandidate[]> & { meta?: { excluded?: ExcludedCandidate[] } }
+      >('/payroll/payruns/preview-scope', payload);
+
+      return {
+        candidates: response.data.data ?? [],
+        excluded: response.data.meta?.excluded ?? [],
+      };
+    },
     { silent: true },
   );
 }

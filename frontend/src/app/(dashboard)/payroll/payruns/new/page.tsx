@@ -14,7 +14,7 @@ import {
 } from '@/hooks/use-resources';
 import { normaliseError } from '@/lib/api/client';
 import { cn, formatDate, formatMoney, monthBounds } from '@/lib/utils';
-import type { ScopeCandidate } from '@/lib/api/types';
+import type { ExcludedCandidate, ScopeCandidate } from '@/lib/api/types';
 
 const EMPLOYEE_TYPES = ['Full-time', 'Part-time', 'Contract', 'Intern'];
 
@@ -41,6 +41,7 @@ export default function NewPayrunPage() {
   const [employeeType, setEmployeeType] = React.useState('');
 
   const [candidates, setCandidates] = React.useState<ScopeCandidate[]>([]);
+  const [excluded, setExcluded] = React.useState<ExcludedCandidate[]>([]);
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [banner, setBanner] = React.useState<string | null>(null);
 
@@ -71,8 +72,9 @@ export default function NewPayrunPage() {
         employeeType: employeeType || undefined,
       });
 
-      setCandidates(result);
-      setSelected(new Set(result.map((candidate) => candidate.id)));
+      setCandidates(result.candidates);
+      setExcluded(result.excluded);
+      setSelected(new Set(result.candidates.map((candidate) => candidate.id)));
       setStep(2);
     } catch (error) {
       setBanner(normaliseError(error).message);
@@ -256,6 +258,30 @@ export default function NewPayrunPage() {
             </span>
           </div>
 
+          {/* Somebody missing from this list is a question the operator will ask,
+              so answer it before they have to. */}
+          {excluded.length > 0 && !preview.isPending ? (
+            <div className="border-b border-[var(--border-subtle)] bg-[var(--status-info-bg)] px-4 py-3">
+              <p className="text-[12.5px] font-medium text-[var(--status-info)]">
+                {excluded.length} employee{excluded.length === 1 ? '' : 's'} left out — already paid
+                for this period
+              </p>
+              <ul className="mt-1.5 space-y-0.5">
+                {excluded.slice(0, 6).map((entry) => (
+                  <li key={entry.id} className="text-[12px] text-[var(--text-tertiary)]">
+                    <span className="text-[var(--text-secondary)]">{entry.name}</span>{' '}
+                    — {entry.excludedMessage}
+                  </li>
+                ))}
+                {excluded.length > 6 ? (
+                  <li className="text-[12px] text-[var(--text-muted)]">
+                    and {excluded.length - 6} more
+                  </li>
+                ) : null}
+              </ul>
+            </div>
+          ) : null}
+
           {preview.isPending ? (
             <div className="space-y-2 p-4">
               {Array.from({ length: 5 }).map((_, index) => (
@@ -265,8 +291,12 @@ export default function NewPayrunPage() {
           ) : candidates.length === 0 ? (
             <div className="py-14">
               <EmptyState
-                title="No eligible employees"
-                description="Nobody has a RUNNING contract covering this period. Check the contracts module, then try again."
+                title={excluded.length > 0 ? 'Everyone is already paid for this period' : 'No eligible employees'}
+                description={
+                  excluded.length > 0
+                    ? 'Every employee with a running contract already has a payslip covering these dates. Choose a different period.'
+                    : 'Nobody has a RUNNING contract covering this period. Check the contracts module, then try again.'
+                }
               />
             </div>
           ) : (

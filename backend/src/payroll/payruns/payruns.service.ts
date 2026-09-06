@@ -87,9 +87,50 @@ export class PayrunsService {
       };
     });
 
+    // Anyone already carrying a payslip for an overlapping period cannot be
+    // included again — `create` refuses it as DUPLICATE_PAYSLIP. Offering them
+    // in the picker and then rejecting the whole payrun wastes the operator's
+    // time, so they are separated out here with the reason attached.
+    const clashing = await this.prisma.payslip.findMany({
+      where: {
+        employeeId: { in: eligibleEmployees.map((employee) => employee.id) },
+        payrun: {
+          status: { not: PayrunStatus.ERROR },
+          periodStart: { lte: periodEnd },
+          periodEnd: { gte: periodStart },
+        },
+      },
+      include: { payrun: { select: { id: true, name: true, status: true } } },
+    });
+
+    const alreadyPaid = new Map(clashing.map((payslip) => [payslip.employeeId, payslip.payrun]));
+
+    const selectable = eligibleEmployees.filter((employee) => !alreadyPaid.has(employee.id));
+
+    const excluded = eligibleEmployees
+      .filter((employee) => alreadyPaid.has(employee.id))
+      .map((employee) => {
+        const payrun = alreadyPaid.get(employee.id)!;
+        return {
+          ...employee,
+          excludedReason: 'DUPLICATE_PAYSLIP',
+          excludedMessage: `Already has a payslip in "${payrun.name}" (${payrun.status}).`,
+          existingPayrunId: payrun.id,
+          existingPayrunName: payrun.name,
+        };
+      });
+
     return {
-      data: eligibleEmployees,
-      meta: { total: eligibleEmployees.length, page: 1, limit: eligibleEmployees.length },
+      data: selectable,
+      meta: {
+        total: selectable.length,
+        page: 1,
+        limit: selectable.length,
+        // Surfaced so the wizard can say why somebody is missing rather than
+        // leaving the operator to wonder.
+        excluded,
+        excludedCount: excluded.length,
+      },
     };
   }
 

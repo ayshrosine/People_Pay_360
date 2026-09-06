@@ -320,6 +320,19 @@ export interface ScopeCandidate {
   contractSalaryStructureId: string | null;
 }
 
+/** An employee the API removed from the picker, and why. */
+export interface ExcludedCandidate extends ScopeCandidate {
+  excludedReason: string;
+  excludedMessage: string;
+  existingPayrunId: string;
+  existingPayrunName: string;
+}
+
+export interface ScopePreview {
+  candidates: ScopeCandidate[];
+  excluded: ExcludedCandidate[];
+}
+
 export interface AppUser {
   id: string;
   email: string;
