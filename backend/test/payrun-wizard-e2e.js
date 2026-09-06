@@ -165,11 +165,20 @@ async function settle(page) {
   });
   check('Compute is enabled on a new payrun', clickedCompute, '');
 
-  // Computing is async; wait for the status to settle.
-  await page.waitForFunction(
-    () => !/computing/i.test(document.body.innerText),
-    { timeout: 90000, polling: 500 },
-  ).catch(() => {});
+  // Compute now returns immediately and finishes in the background, so poll the
+  // record itself rather than page text that may never say "Computing".
+  let settled = null;
+  for (let attempt = 0; createdId && attempt < 90; attempt += 1) {
+    settled = await prisma.payrun.findUnique({
+      where: { id: createdId },
+      select: { status: true },
+    });
+    if (settled && settled.status !== 'COMPUTING' && settled.status !== 'DRAFT') break;
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  console.log('  (settled to ' + (settled?.status ?? '?') + ')');
+
+  // Let the polling UI catch up so the screenshot shows the finished state.
   await new Promise((r) => setTimeout(r, 3000));
   await page.screenshot({ path: path.join(SHOTS, 'WIZARD_computed.png') });
 

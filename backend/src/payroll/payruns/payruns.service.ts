@@ -326,9 +326,13 @@ export class PayrunsService {
    * Computes every payslip in the payrun through the salary rule engine.
    *
    * Runs inline rather than through BullMQ so the platform works without a
-   * Redis dependency; the payrun still moves through COMPUTING so the UI's
-   * progress state machine is exercised, and one payslip failing does not
-   * abort the rest of the batch.
+   * Redis dependency, but it does *not* block the request: the payrun is put
+   * into COMPUTING, the work is started, and the endpoint returns immediately.
+   * The UI already polls while a payrun is COMPUTING.
+   *
+   * Computing fourteen payslips took 77 seconds when this awaited each one in
+   * turn — long enough that operators concluded the button was broken. The
+   * payslips are independent, so they run in bounded batches instead.
    */
   async compute(id: string) {
     const payrun = await this.prisma.payrun.findUnique({
@@ -350,7 +354,10 @@ export class PayrunsService {
     if (
       payrun.status !== PayrunStatus.DRAFT &&
       payrun.status !== PayrunStatus.COMPUTED &&
-      payrun.status !== PayrunStatus.ERROR
+      payrun.status !== PayrunStatus.ERROR &&
+      // COMPUTING is allowed so a run left stuck by a restart can be retried.
+      // Computing a payslip replaces its lines wholesale, so it is idempotent.
+      payrun.status !== PayrunStatus.COMPUTING
     ) {
       throw new BadRequestException({
         message: `Cannot compute a payrun in status ${payrun.status}.`,
@@ -364,49 +371,89 @@ export class PayrunsService {
     });
     this.breadcrumb(id, PayrunStatus.COMPUTING);
 
-    let failures = 0;
-
-    for (const payslip of payrun.payslips) {
-      try {
-        const outcome = await this.computation.computePayslip(payslip.id);
-        if (outcome.status === PayslipStatus.ERROR) failures += 1;
-      } catch (error) {
-        failures += 1;
-        this.logger.error(
-          `Failed to compute payslip ${payslip.id} of payrun ${id}`,
-          error instanceof Error ? error.stack : String(error),
-        );
-        Sentry.captureException(error, {
-          tags: { job: 'compute-payslip' },
-          extra: { payslipId: payslip.id, payrunId: id },
-        });
-        await this.prisma.payslip.update({
-          where: { id: payslip.id },
-          data: {
-            status: PayslipStatus.ERROR,
-            warnings: [
-              {
-                code: 'COMPUTATION_FAILED',
-                severity: 'blocking',
-                message: error instanceof Error ? error.message : 'Computation failed',
-              },
-            ] as unknown as Prisma.InputJsonValue,
-          },
-        });
-      }
-    }
-
-    // COMPUTED even with failures: individual payslips carry their own ERROR
-    // status and the validate step is what actually blocks on them.
-    const nextStatus =
-      payrun.payslips.length > 0 && failures === payrun.payslips.length
-        ? PayrunStatus.ERROR
-        : PayrunStatus.COMPUTED;
-
-    await this.prisma.payrun.update({ where: { id }, data: { status: nextStatus } });
-    this.breadcrumb(id, nextStatus);
+    // Started, not awaited: the caller gets an immediate answer and the UI
+    // polls the payrun until it leaves COMPUTING.
+    void this.runComputation(id, payrun.payslips.map((payslip) => payslip.id));
 
     return this.findOne(id);
+  }
+
+  /**
+   * Computes a payrun's payslips in bounded parallel batches.
+   *
+   * Concurrency is deliberately modest. Each payslip is a handful of queries
+   * against a remote database, so running them all at once would open far more
+   * connections than the pool wants, while running them one at a time wastes
+   * the entire round-trip latency on every single one.
+   */
+  private async runComputation(id: string, payslipIds: string[]) {
+    const CONCURRENCY = 6;
+    let failures = 0;
+
+    try {
+      for (let index = 0; index < payslipIds.length; index += CONCURRENCY) {
+        const batch = payslipIds.slice(index, index + CONCURRENCY);
+
+        const outcomes = await Promise.all(
+          batch.map((payslipId) => this.computeOne(payslipId, id)),
+        );
+        failures += outcomes.filter((failed) => failed).length;
+      }
+
+      // COMPUTED even with failures: individual payslips carry their own ERROR
+      // status and the validate step is what actually blocks on them.
+      const nextStatus =
+        payslipIds.length > 0 && failures === payslipIds.length
+          ? PayrunStatus.ERROR
+          : PayrunStatus.COMPUTED;
+
+      await this.prisma.payrun.update({ where: { id }, data: { status: nextStatus } });
+      this.breadcrumb(id, nextStatus);
+    } catch (error) {
+      // Nothing is awaiting this, so a failure here would otherwise leave the
+      // payrun stuck in COMPUTING with no explanation anywhere.
+      this.logger.error(
+        `Computation of payrun ${id} failed`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      Sentry.captureException(error, { tags: { job: 'compute-payrun' }, extra: { payrunId: id } });
+      await this.prisma.payrun
+        .update({ where: { id }, data: { status: PayrunStatus.ERROR } })
+        .catch(() => undefined);
+    }
+  }
+
+  /** Computes one payslip. Resolves to true when it failed. */
+  private async computeOne(payslipId: string, payrunId: string): Promise<boolean> {
+    try {
+      const outcome = await this.computation.computePayslip(payslipId);
+      return outcome.status === PayslipStatus.ERROR;
+    } catch (error) {
+      this.logger.error(
+        `Failed to compute payslip ${payslipId} of payrun ${payrunId}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      Sentry.captureException(error, {
+        tags: { job: 'compute-payslip' },
+        extra: { payslipId, payrunId },
+      });
+
+      await this.prisma.payslip.update({
+        where: { id: payslipId },
+        data: {
+          status: PayslipStatus.ERROR,
+          warnings: [
+            {
+              code: 'COMPUTATION_FAILED',
+              severity: 'blocking',
+              message: error instanceof Error ? error.message : 'Computation failed',
+            },
+          ] as unknown as Prisma.InputJsonValue,
+        },
+      });
+
+      return true;
+    }
   }
 
   async validate(id: string) {
