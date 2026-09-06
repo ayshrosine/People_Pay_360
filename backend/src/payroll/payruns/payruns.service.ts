@@ -1,5 +1,6 @@
 import {
   Injectable,
+  ConflictException,
   NotFoundException,
   BadRequestException,
   Logger,
@@ -202,6 +203,49 @@ export class PayrunsService {
         message: 'One or more selected employees no longer exist',
         code: 'EMPLOYEE_NOT_FOUND',
         errors: uniqueEmployeeIds.filter((id) => !found.has(id)),
+      });
+    }
+
+    // Nobody may be paid twice for the same period. A second payrun over the
+    // same dates containing the same people is the one mistake in this module
+    // that quietly costs real money, so it is refused by name here rather than
+    // discovered in a bank reconciliation later.
+    const overlapping = await this.prisma.payrun.findMany({
+      where: {
+        status: { not: PayrunStatus.ERROR },
+        periodStart: { lte: periodEnd },
+        periodEnd: { gte: periodStart },
+        payslips: { some: { employeeId: { in: uniqueEmployeeIds } } },
+      },
+      include: {
+        payslips: {
+          where: { employeeId: { in: uniqueEmployeeIds } },
+          include: { employee: { select: { id: true, name: true } } },
+        },
+      },
+    });
+
+    if (overlapping.length > 0) {
+      const clashes = overlapping.flatMap((run) =>
+        run.payslips.map((payslip) => ({
+          employeeId: payslip.employeeId,
+          employeeName: payslip.employee?.name,
+          payrunId: run.id,
+          payrunName: run.name,
+          code: 'DUPLICATE_PAYSLIP',
+          message: `${payslip.employee?.name ?? 'This employee'} already has a payslip in "${run.name}" for an overlapping period.`,
+        })),
+      );
+
+      const names = [...new Set(clashes.map((c) => c.employeeName).filter(Boolean))];
+
+      throw new ConflictException({
+        message:
+          `${names.length} of the selected employee(s) already have a payslip covering this period ` +
+          `(${names.slice(0, 3).join(', ')}${names.length > 3 ? `, +${names.length - 3} more` : ''}). ` +
+          'Remove them from the selection, or delete the earlier payrun.',
+        code: 'DUPLICATE_PAYSLIP',
+        errors: clashes,
       });
     }
 

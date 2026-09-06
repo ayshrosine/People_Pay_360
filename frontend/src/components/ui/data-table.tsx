@@ -38,6 +38,18 @@ interface DataTableProps<T> {
   emptyAction?: React.ReactNode;
   skeletonRows?: number;
   className?: string;
+
+  /**
+   * Selection. Supplying `selected` and `onSelectionChange` adds a leading
+   * checkbox column and a select-all box in the header.
+   *
+   * `selectable` marks which rows may be picked at all — a paid payslip is
+   * still shown, but it cannot be acted on, so offering a checkbox for it would
+   * be a lie the server has to catch later.
+   */
+  selected?: Set<string>;
+  onSelectionChange?: (next: Set<string>) => void;
+  selectable?: (row: T) => boolean;
 }
 
 export function DataTable<T>({
@@ -53,8 +65,36 @@ export function DataTable<T>({
   emptyAction,
   skeletonRows = 6,
   className,
+  selected,
+  onSelectionChange,
+  selectable,
 }: DataTableProps<T>) {
   const interactive = Boolean(onRowClick);
+  const selecting = Boolean(selected && onSelectionChange);
+
+  const eligible = (rows ?? []).filter((row) => (selectable ? selectable(row) : true));
+  const allChosen = eligible.length > 0 && eligible.every((row) => selected?.has(rowKey(row)));
+  const someChosen = eligible.some((row) => selected?.has(rowKey(row)));
+
+  function toggleAll() {
+    if (!selected || !onSelectionChange) return;
+    const next = new Set(selected);
+    // Select-all applies to the rows on screen, so a filtered list selects what
+    // the user can actually see - never a hidden row they did not look at.
+    if (allChosen) eligible.forEach((row) => next.delete(rowKey(row)));
+    else eligible.forEach((row) => next.add(rowKey(row)));
+    onSelectionChange(next);
+  }
+
+  function toggleOne(id: string) {
+    if (!selected || !onSelectionChange) return;
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    onSelectionChange(next);
+  }
+
+  const columnCount = columns.length + (selecting ? 1 : 0);
 
   return (
     // Wide tables scroll inside their own container; the page never does.
@@ -62,6 +102,22 @@ export function DataTable<T>({
       <table className="w-full min-w-full border-collapse text-[13px]">
         <thead>
           <tr className="border-b border-[var(--border-default)]">
+            {selecting ? (
+              <th scope="col" className="w-9 px-3 py-2">
+                <input
+                  type="checkbox"
+                  className="checkbox"
+                  aria-label={allChosen ? 'Clear selection' : 'Select all rows'}
+                  checked={allChosen}
+                  // Some-but-not-all reads as a dash rather than a tick.
+                  ref={(el) => {
+                    if (el) el.indeterminate = someChosen && !allChosen;
+                  }}
+                  disabled={eligible.length === 0}
+                  onChange={toggleAll}
+                />
+              </th>
+            ) : null}
             {columns.map((column) => (
               <th
                 key={column.key}
@@ -83,6 +139,7 @@ export function DataTable<T>({
           {loading ? (
             Array.from({ length: skeletonRows }).map((_, rowIndex) => (
               <tr key={rowIndex} className="border-b border-[var(--border-subtle)]">
+                {selecting ? <td className="px-3 py-2.5" /> : null}
                 {columns.map((column) => (
                   <td key={column.key} className="px-3 py-2.5">
                     <div
@@ -95,7 +152,7 @@ export function DataTable<T>({
             ))
           ) : error ? (
             <tr>
-              <td colSpan={columns.length} className="px-3 py-14">
+              <td colSpan={columnCount} className="px-3 py-14">
                 <EmptyState
                   icon={<AlertCircle className="h-5 w-5 text-[var(--status-danger)]" />}
                   title="Could not load this list"
@@ -105,13 +162,16 @@ export function DataTable<T>({
             </tr>
           ) : !rows || rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-3 py-14">
+              <td colSpan={columnCount} className="px-3 py-14">
                 <EmptyState title={emptyTitle} description={emptyDescription} action={emptyAction} />
               </td>
             </tr>
           ) : (
             rows.map((row) => {
               const accented = rowAccent?.(row) ?? false;
+              const id = rowKey(row);
+              const chosen = selected?.has(id) ?? false;
+              const canSelect = selectable ? selectable(row) : true;
               return (
                 <tr
                   key={rowKey(row)}
@@ -136,8 +196,25 @@ export function DataTable<T>({
                       // so hovering previews the shape of a selected row.
                       'cursor-pointer hover:bg-[var(--surface-hover)] hover:shadow-[inset_2px_0_0_0_var(--accent)] focus-visible:bg-[var(--surface-hover)] focus-visible:shadow-[inset_2px_0_0_0_var(--accent)] focus-visible:outline-none',
                     accented && 'shadow-[inset_2px_0_0_0_var(--status-success)]',
+                    chosen && 'bg-[var(--accent-subtle)]',
                   )}
                 >
+                  {selecting ? (
+                    <td
+                      className="px-3 py-2.5 align-middle"
+                      // The checkbox must not also open the row.
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        className="checkbox"
+                        aria-label={chosen ? 'Deselect this row' : 'Select this row'}
+                        checked={chosen}
+                        disabled={!canSelect}
+                        onChange={() => toggleOne(id)}
+                      />
+                    </td>
+                  ) : null}
                   {columns.map((column) => (
                     <td
                       key={column.key}

@@ -29,9 +29,10 @@ const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, 
   const known = new Set((existing.data || existing).map((p) => p.name));
 
   const now = new Date();
-  // Three closed months plus the month in progress, so the trend chart has a
-  // real series rather than a single point.
-  for (let back = 3; back >= 0; back -= 1) {
+  // Three closed months, the month in progress, and next month. The closed ones
+  // give the trend chart a real series; the open ones leave something to
+  // actually act on, so the payrun workflow is not a museum piece.
+  for (let back = 3; back >= -1; back -= 1) {
     const anchor = new Date(now.getFullYear(), now.getMonth() - back, 1);
     const start = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
     const end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
@@ -58,7 +59,8 @@ const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, 
 
     const cols = [name.padEnd(18), String(state.status).padEnd(10), ids.length + ' in scope'];
     if (state.status === 'COMPUTED') {
-      // The current month stays COMPUTED so the UI has a payrun to act on.
+      // Closed months are paid; the current and next month stay COMPUTED so the
+      // UI always has a payrun whose buttons do something.
       if (back > 0) {
         await call('POST', '/payroll/payruns/' + run.id + '/validate', {}, token);
         const paid = await call('POST', '/payroll/payruns/' + run.id + '/mark-paid', {}, token);

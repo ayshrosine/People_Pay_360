@@ -7,8 +7,9 @@ import { PageShell } from '@/components/layout/page-shell';
 import { Button } from '@/components/ui/button';
 import { Avatar, Card, CardHeader } from '@/components/ui/primitives';
 import { DataTable, Skeleton } from '@/components/ui/data-table';
+import { BulkPayslipBar } from '@/components/payroll/bulk-payslip-bar';
 import { StatusChip } from '@/components/ui/status';
-import { usePayrun, usePayrunAction } from '@/hooks/use-resources';
+import { useBulkPayslipAction, usePayrun, usePayrunAction } from '@/hooks/use-resources';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { cn, formatDate, formatMoney, formatNumber } from '@/lib/utils';
 import type { Payslip, PayrunStatus } from '@/lib/api/types';
@@ -86,6 +87,9 @@ export default function PayrunPage() {
       query.state.data?.status === 'COMPUTING' ? 2000 : false,
   });
   const runAction = usePayrunAction(id);
+  const bulk = useBulkPayslipAction(id);
+
+  const [selected, setSelected] = React.useState<Set<string>>(new Set());
 
   const canManage = can('update', 'Payrun');
   const status = payrun.data?.status;
@@ -93,6 +97,22 @@ export default function PayrunPage() {
   const payslips = payrun.data?.payslips ?? [];
 
   const computedCount = payslips.filter((slip) => slip.status !== 'DRAFT').length;
+
+  // A paid payrun is immutable, so nothing in it is selectable. Elsewhere an
+  // individual paid payslip is still off limits.
+  const locked = status === 'PAID';
+
+  // Selection is derived, not stored: ids that have left the payrun (removed,
+  // or the run refetched) must not linger in the set and re-appear in a count.
+  const visibleIds = new Set(payslips.map((slip) => slip.id));
+  const liveSelection = new Set([...selected].filter((sid) => visibleIds.has(sid)));
+
+  function runBulk(action: Parameters<typeof bulk.mutate>[0]['action']) {
+    bulk.mutate(
+      { action, payslipIds: [...liveSelection] },
+      { onSuccess: () => setSelected(new Set()) },
+    );
+  }
 
   if (payrun.isLoading) {
     return (
@@ -238,13 +258,33 @@ export default function PayrunPage() {
         ))}
       </div>
 
+      {canManage ? (
+        <BulkPayslipBar
+          selected={liveSelection}
+          payslips={payslips}
+          pending={bulk.isPending ? bulk.variables?.action ?? null : null}
+          onRun={runBulk}
+          onClear={() => setSelected(new Set())}
+        />
+      ) : null}
+
       <Card>
-        <CardHeader title="Payslips" description="Click a row for the full rule breakdown" />
+        <CardHeader
+          title="Payslips"
+          description={
+            canManage && !locked
+              ? 'Select rows to validate, pay, send or remove them individually.'
+              : 'Click a row for the full rule breakdown'
+          }
+        />
         <DataTable<Payslip>
           rows={payslips}
           rowKey={(row) => row.id}
           onRowClick={(row) => router.push(`/payroll/payslips/${row.id}`)}
           emptyTitle="No payslips in this payrun"
+          selected={canManage && !locked ? liveSelection : undefined}
+          onSelectionChange={canManage && !locked ? setSelected : undefined}
+          selectable={(row) => row.status !== 'PAID'}
           columns={[
             {
               key: 'employee',

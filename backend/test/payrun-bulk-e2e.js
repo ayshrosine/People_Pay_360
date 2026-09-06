@@ -126,7 +126,9 @@ const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, 
   const statuses = (full.payslips || []).reduce((acc, p) => {
     acc[p.status] = (acc[p.status] || 0) + 1; return acc;
   }, {});
-  check('the rest stay computed', (statuses.COMPUTED || 0) === rest.length, JSON.stringify(statuses));
+  // The untouched clean payslips plus the blocked one are all still COMPUTED.
+  check('everything not selected stays computed',
+    (statuses.COMPUTED || 0) === rest.length + blocked.length, JSON.stringify(statuses));
   check('the payrun is still COMPUTED while any payslip is', full.status === 'COMPUTED', full.status);
 
   const twice = await req('POST', '/payroll/payruns/' + payrunId + '/payslips/validate', T, {

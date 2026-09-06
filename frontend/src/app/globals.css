@@ -382,3 +382,25 @@ table th {
 .rise-in {
   animation: rise-in 260ms var(--ease-out) both;
 }
+
+/* Checkboxes. `accent-color` styles the native control, which keeps the
+   keyboard behaviour, the indeterminate dash and the screen-reader semantics
+   the browser already gets right - all of which a div-based checkbox loses. */
+.checkbox {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: opacity 150ms var(--ease-out);
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.checkbox:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+}

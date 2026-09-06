@@ -560,6 +560,66 @@ export function usePayrunAction(payrunId: string) {
   });
 }
 
+export type BulkPayslipAction = 'remove' | 'validate' | 'mark-paid' | 'send';
+
+interface BulkResult {
+  removed?: number;
+  validated?: number;
+  paid?: number;
+  sent?: number;
+  skipped?: number;
+  message?: string;
+  employees?: string[];
+}
+
+/**
+ * Acts on a chosen set of payslips inside one payrun.
+ *
+ * A payrun of forty people should not have to be redone because one of them is
+ * wrong, so every action here takes an explicit selection. The server re-checks
+ * each rule; this only decides what to offer.
+ */
+export function useBulkPayslipAction(payrunId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<BulkResult, Error, { action: BulkPayslipAction; payslipIds: string[] }>({
+    mutationFn: ({ action, payslipIds }) =>
+      postData(`/payroll/payruns/${payrunId}/payslips/${action}`, { payslipIds }),
+    onSuccess: (data, { action }) => {
+      void queryClient.invalidateQueries({ queryKey: ['payroll'] });
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+
+      const messages: Record<BulkPayslipAction, string> = {
+        remove: `${data?.removed ?? 0} payslip(s) removed from this payrun.`,
+        validate: `${data?.validated ?? 0} payslip(s) validated.`,
+        'mark-paid': `${data?.paid ?? 0} payslip(s) marked as paid.`,
+        // The server says whether mail actually left, so repeat it verbatim
+        // rather than claiming delivery the app cannot perform.
+        send: data?.message ?? `${data?.sent ?? 0} payslip(s) sent.`,
+      };
+      toast.success(messages[action]);
+    },
+    onError: (error) => {
+      const normalised = normaliseError(error);
+
+      if (normalised.code === 'BLOCKING_WARNINGS') {
+        // Name who is blocked; "resolve the warnings" alone means hunting.
+        const blocked = (error as { response?: { data?: { errors?: { employeeName?: string }[] } } })
+          ?.response?.data?.errors ?? [];
+        const names = blocked.map((b) => b.employeeName).filter(Boolean);
+        toast.error(
+          names.length
+            ? `Blocked: ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` +${names.length - 3} more` : ''}`
+            : normalised.message,
+        );
+        return;
+      }
+
+      toast.error(normalised.message);
+    },
+  });
+}
+
 export function usePayslips(params: { payrunId?: string; employeeId?: string; status?: string } = {}) {
   return useQuery({
     queryKey: keys.payslips(params),
