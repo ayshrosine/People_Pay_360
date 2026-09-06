@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/overlay';
 import { useAuth } from '@/lib/auth/auth-provider';
-import { ROLE_LABELS } from '@/lib/abilities';
+import { homeRouteFor, ROLE_LABELS } from '@/lib/abilities';
 import { useUiStore, type Theme } from '@/stores/ui-store';
 import { useCurrentNavLabel } from '@/components/layout/sidebar';
 import { CommandPalette } from '@/components/layout/command-palette';
@@ -54,7 +54,7 @@ export function Topbar() {
         <div className="flex h-14 items-center gap-3 px-4 sm:px-6">
           <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13px]">
             <Link
-              href="/dashboard"
+              href={homeRouteFor(role)}
               className="shrink-0 text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)]"
             >
               Workspace

@@ -9,6 +9,7 @@ import {
   Palmtree,
   Receipt,
   Save,
+  Wallet,
   Trash2,
 } from 'lucide-react';
 import { PageShell } from '@/components/layout/page-shell';
@@ -38,6 +39,8 @@ import {
   useEmployees,
   useSaveEmployee,
   useTimeOffRequests,
+  useAllocations,
+  usePayslips,
   useAttendance,
 } from '@/hooks/use-resources';
 import { useAuth } from '@/lib/auth/auth-provider';
@@ -409,6 +412,8 @@ function SmartButtons({ employeeId }: { employeeId: string }) {
   const contracts = useContracts({ employeeId });
   const attendance = useAttendance({ employeeId });
   const requests = useTimeOffRequests({ employeeId });
+  const allocations = useAllocations({ employeeId });
+  const payslips = usePayslips({ employeeId });
 
   const buttons = [
     {
@@ -433,16 +438,24 @@ function SmartButtons({ employeeId }: { employeeId: string }) {
       loading: requests.isLoading,
     },
     {
+      href: `/time-off/allocations?employeeId=${employeeId}`,
+      label: 'Allocations',
+      icon: Wallet,
+      count: allocations.data?.data.length,
+      loading: allocations.isLoading,
+    },
+    {
       href: `/payroll/payslips?employeeId=${employeeId}`,
       label: 'Payslips',
       icon: Receipt,
-      count: undefined,
-      loading: false,
+      // A real count, like every other button: "the count is the point".
+      count: payslips.data?.data.length,
+      loading: payslips.isLoading,
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
       {buttons.map((button) => (
         <Link
           key={button.href}

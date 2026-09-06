@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Brand } from '@/components/layout/brand';
 import { useAuth } from '@/lib/auth/auth-provider';
-import type { Subject } from '@/lib/abilities';
+import { homeRouteFor, type Subject } from '@/lib/abilities';
 
 export interface NavItem {
   href: string;
@@ -62,14 +62,16 @@ export function isNavItemActive(item: NavItem, pathname: string): boolean {
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
-  const { can, logout } = useAuth();
+  const { can, logout, role } = useAuth();
 
   const items = NAV.filter((item) => can('read', item.subject));
   const showAdmin = can('read', 'User');
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-[var(--border-subtle)] bg-[var(--surface-base)] lg:flex">
-      <Brand href="/dashboard" className="px-5 py-5" />
+      {/* Home is per role: the dashboard is an HR view, so sending an employee
+          there from the logo would bounce them straight back out. */}
+      <Brand href={homeRouteFor(role)} className="px-5 py-5" />
 
       <p className="px-5 pb-2 pt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--text-muted)]">
         HR Workspace

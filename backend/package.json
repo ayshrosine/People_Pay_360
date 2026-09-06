@@ -32,7 +32,10 @@
     "seed:heads": "node prisma/seed-heads.js",
     "test:heads": "node test/department-head-e2e.js",
     "test:head-ui": "node test/head-ui-e2e.js",
-    "test:all": "npm run test:api && npm run test:heads && npm run test:ui && npm run test:head-ui"
+    "test:all": "npm run test:api && npm run test:heads && npm run test:scope && npm run test:ui && npm run test:head-ui && npm run test:employee-ui",
+    "seed:scenarios": "node prisma/seed-scenarios.js",
+    "test:scope": "node test/scope-audit.js",
+    "test:employee-ui": "node test/employee-ui-e2e.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1127.0",
